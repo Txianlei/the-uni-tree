@@ -63,9 +63,12 @@ addLayer("g", {
             },
             canAfford(){return player.g.points.gte(5)&&player.points.gt("1e-39")},
             pay(){return player.g.points=player.g.points.minus(5)},
-            effect(){return player.g.points.add(1).ln().pow(1.44)},
+            effect(){return player.g.points.add(1).ln().pow(hasUpgrade("g",16)?1.6:1.44)},
             effectDisplay(){return `Currently:x${format(upgradeEffect("g",12))}`},
-            tooltip(){return `ln(g+1)^1.44`}
+            tooltip(){
+                if(hasUpgrade("g",21)) return `ln(g+1)<b style="color:#00EF00">^1.6`
+                return `ln(g+1)^1.44`
+            }
         },
         13:{
             title:"Pulling",
@@ -78,7 +81,10 @@ addLayer("g", {
             pay(){return player.g.points=player.g.points.minus(15)},
             effect(){return player.points.times(1e40).pow(0.025).add(1)},
             effectDisplay(){return `Currently:x${format(upgradeEffect("g",13))}`},
-            tooltip(){return `(1e40*f)^0.025+1`}
+            tooltip(){
+                if(hasUpgrade("g",22)) return `(f*1e40)<b style="color:#00EF00">^0.04</b>+1`
+                return `(f*1e40)^0.025+1`
+            }
         },
         14:{
             title:"Genesis power",
@@ -103,11 +109,59 @@ addLayer("g", {
             canAfford(){return player.g.points.gte(100)&&player.points.gt("1e-39")},
             pay(){return player.g.points=player.g.points.minus(100)},
         },
+        21:{
+            title:"Stronger force",
+            description(){return `"Strong force" effect is stronger.`},
+            cost(){return new Decimal(2e5)},
+            unlocked(){ 
+                return hasUpgrade("g",15)
+            },
+            canAfford(){return player.g.points.gte(2e5)&&player.points.gt("1e-39")},
+            pay(){return player.g.points=player.g.points.minus(2e5)},
+            tooltip(){return "1.44->1.6"}
+        },
+        22:{
+            title:"Strenth",
+            description(){return `"Pulling" effect is stronger.`},
+            cost(){return new Decimal(1.5e6)},
+            unlocked(){ 
+                return hasUpgrade("g",21)
+            },
+            canAfford(){return player.g.points.gte(1.5e6)&&player.points.gt("1e-39")},
+            pay(){return player.g.points=player.g.points.minus(1.5e6)},
+            tooltip(){return "0.025->0.04"}
+        },
+        23:{
+            title:"Cosmic wave",
+            description(){return `Boost force gain base based on genesis.`},
+            cost(){return new Decimal(5e6)},
+            unlocked(){ 
+                return hasUpgrade("g",22)
+            },
+            canAfford(){return player.g.points.gte(5e6)&&player.points.gt("1e-39")},
+            pay(){return player.g.points=player.g.points.minus(5e6)},
+            effect(){return player.g.points.add(1).log10().div(100).min(1)},
+            effectDisplay(){return this.effect().eq(1)?`Currently:+1.00(Hard capped)`:`Currently:+${format(upgradeEffect("g",23))}`},
+            tooltip(){return `log10(g+1)/100`}
+        },
+        24:{
+            title:"Balanced gravity",
+            description(){return `Divide "Gravitational field" price based on force.`},
+            cost(){return new Decimal(1e7)},
+            unlocked(){ 
+                return hasUpgrade("g",23)
+            },
+            canAfford(){return player.g.points.gte(1e7)&&player.points.gt("1e-39")},
+            pay(){return player.g.points=player.g.points.minus(1e7)},
+            effect(){return player.points.times(1e35).add(1).pow(0.2).max(1)},
+            effectDisplay(){return `Currently:/${format(upgradeEffect("g",24))}`},
+            tooltip(){return `(f*1e35+1)^0.2`}
+        },
     },
     buyables:{
         11:{
             title:"Gravitational field",
-            cost(x) { return Decimal.pow(10,Decimal.pow(x,2))},
+            cost(x) { return Decimal.pow(10,Decimal.pow(x,1.5)).div(hasUpgrade("g",24)?upgradeEffect("g",24):1)},
             effect(x) { return Decimal.pow(3,x)},
             display() { return `Reset genesis,force,and genesis upgrades to boost genesis and force gain.
                                 Next at: ${format(this.cost())} genesis
@@ -123,7 +177,7 @@ addLayer("g", {
             },
             buyMax() {
                 if(!tmp.g.buyables[11].canAfford) return
-                let tb = player.g.points.max(1).log10.sqrt()
+                let tb = player.g.points.max(1).times(hasUpgrade("g",24)?upgradeEffect("g",24):1).log10().root(1.5)
                 let tg = tb.plus(1).floor()
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).max(tg))
             },
@@ -148,6 +202,7 @@ addLayer("st", {
             content:[
                 ["infobox","Genesis1"],
                 ["infobox","Genesis2"],
+                ["infobox","Genesis3"],
             ]
         }
     },
@@ -165,7 +220,14 @@ addLayer("st", {
                            But it is still weaker than you thought, you should find a way to make it faster.....
                 ` },
             style:{"width":"400px"},
-            unlocked(){return hasUpgrade("g",11)}
+            unlocked(){return hasUpgrade("g",11)||getBuyableAmount("g",11).gt(0)}
+        },
+        Genesis3: {
+            title: "Part III-Gravity",
+            body() { return `The force is strong enough to pull each other together.<br>
+                            These makes produce faster.` },
+            style:{"width":"400px"},
+            unlocked(){return getBuyableAmount("g",11).gt(0)}
         },
     },
 })

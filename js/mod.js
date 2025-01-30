@@ -41,7 +41,9 @@ function getPointGen() {
         return new Decimal(0)
 
     let gain=new Decimal("1e-40")
-    gain=gain.times(Decimal.pow(3,player.g.points.add(1).log10()))
+    let base=new Decimal(3)
+    if(hasUpgrade("g",23)) base=base.add(upgradeEffect("g",23))
+    gain=gain.times(Decimal.pow(base,player.g.points.add(1).log10()))
     if(hasUpgrade("g",11)) gain=gain.times(2)
     if(hasUpgrade("g",12)) gain=gain.times(upgradeEffect("g",12))
     if(hasUpgrade("g",13)) gain=gain.times(upgradeEffect("g",13))
