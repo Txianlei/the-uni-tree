@@ -16,6 +16,7 @@ addLayer("g", {
     gainMult() { // Calculate the multiplier for main currency from bonuses
         mult = new Decimal(1)
         if(hasUpgrade("g",14)) mult=mult.times(upgradeEffect("g",14))
+        if(hasUpgrade("g",32)) mult=mult.times(upgradeEffect("g",32))
         if(hasUpgrade("g",15)) mult=mult.times(3)
         mult=mult.times(buyableEffect("g",11))
         mult=mult.times(buyableEffect("g",23))
@@ -173,7 +174,7 @@ addLayer("g", {
             description(){return `Unlock new buyables.`},
             cost(){return new Decimal(1e8)},
             unlocked(){ 
-                return hasUpgrade("g",24)
+                return hasUpgrade("g",24)||hasUpgrade("g",25)
             },
             canAfford(){return player.g.points.gte(1e8)&&player.points.gt("1e-39")},
             pay(){return player.g.points=player.g.points.minus(1e8)},
@@ -187,6 +188,29 @@ addLayer("g", {
             },
             canAfford(){return player.g.points.gte(1e12)&&player.points.gt("1e-39")},
             pay(){return player.g.points=player.g.points.minus(1e12)},
+        },
+        32:{
+            title:"Synergism power",
+            description(){return `Boost genesis gain based on "Positive"s.`},
+            cost(){return new Decimal(1e16)},
+            unlocked(){ 
+                return hasUpgrade("g",31)
+            },
+            canAfford(){return player.g.points.gte(1e16)&&player.points.gt("1e-39")},
+            pay(){return player.g.points=player.g.points.minus(1e16)},
+            effect(){return getBuyableAmount("g",21).add(1).pow(2).div(10)},
+            effectDisplay(){return `Currently:x${format(upgradeEffect("g",32))}`},
+            tooltip(){return `(n+1)^2/10`}
+        },
+        33:{
+            title:"Quark",
+            description(){return `Unlock a new layer.`},
+            cost(){return new Decimal(1e20)},
+            unlocked(){ 
+                return hasUpgrade("g",32)
+            },
+            canAfford(){return player.g.points.gte(1e20)&&player.points.gt("1e-39")},
+            pay(){return player.g.points=player.g.points.minus(1e20)},
         },
     },
     buyables:{
@@ -286,6 +310,49 @@ addLayer("g", {
         },
     },
 }),
+addLayer("q", {
+    name: "quark", // This is optional, only used in a few places, If absent it just uses the layer id.
+    symbol: "Q", // This appears on the layer's node. Default is the id with the first letter capitalized
+    position: 0, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
+    startData() { return {
+        unlocked: false,
+		points: new Decimal(0),
+    }},
+    color:"rgb(175, 50, 50)",
+    requires: new Decimal("1e-13"), // Can be a function that takes requirement increases into account
+    resource: "quark", // Name of prestige currency
+    baseResource: "force", // Name of resource prestige is based on
+    baseAmount() {return player.points}, // Get the current amount of baseResource
+    type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
+    exponent: 0.05, // Prestige currency exponent
+    gainMult() { // Calculate the multiplier for main currency from bonuses
+        mult = new Decimal(1)
+        return mult
+    },
+    gainExp() { // Calculate the exponent on main currency from bonuses
+        return new Decimal(1)
+    },
+    row: 1, // Row the layer is in on the tree (0 is the first row)
+    hotkeys: [
+        {key: "q", description: "Q: Reset for quarks", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+    ],
+    layerShown(){return hasUpgrade("g",33)||player.q.unlocked},
+    branches:["g"],
+    tabFormat:{
+        "Main":{
+            content:[
+                ["display-text",function() { return `You have <h2 style="color:rgb(175,50,50);text-shadow:0 0 10px rgb(175,50,50)">${format(player.q.points)}</h2> quark, boost force gain by <h2 style="color:rgb(175,50,50);text-shadow:0 0 10px rgb(175,50,50)">${format(tmp.q.calcqboost)}</h2>`},{ "font-size":"15px"},],
+                "blank",
+                "prestige-button",
+                "blank",
+                "upgrades",
+            ]
+        },
+    },
+    calcqboost(){
+        return Decimal.pow(11,player.q.points.add(1).log10()).pow(2)
+    }
+}),
 addLayer("st", {
     symbol: "#",
     startData() { return {
@@ -308,7 +375,15 @@ addLayer("st", {
                 "blank",
                 ["infobox","Genesis4"],
                 "blank",
+                ["infobox","Genesis5"],
             ]
+        },
+        "Chapter II":{
+            content:[
+                ["infobox","Quark1"],
+                "blank",
+            ],
+            unlocked(){return player.q.unlocked},
         }
     },
     infoboxes: {
@@ -325,28 +400,38 @@ addLayer("st", {
                            But it is still weaker than you thought, you should find a way to make it faster.....
                 ` },
             style:{"width":"400px"},
-            unlocked(){return hasUpgrade("g",11)||getBuyableAmount("g",11).gt(0)}
+            unlocked(){return hasUpgrade("g",11)||getBuyableAmount("g",11).gt(0)||player.q.unlocked}
         },
         Genesis3: {
             title: "Part III-Gravity",
             body() { return `The force is strong enough to pull each other together.<br>
                             These makes produce faster.` },
             style:{"width":"400px"},
-            unlocked(){return getBuyableAmount("g",11).gt(0)}
+            unlocked(){return getBuyableAmount("g",11).gt(0)||player.q.unlocked}
         },
         Genesis4: {
             title: "Part IV-Quantom",
             body() { return `Something strange things appeared in the void.<br>
                             Spend some force to catch it.` },
             style:{"width":"400px"},
-            unlocked(){return hasUpgrade("g",25)}
+            unlocked(){return hasUpgrade("g",25)||player.q.unlocked}
         },
         Genesis5: {
             title: "Part V-Vanish",
             body() { return `You caught a positive quantom and a negative one.<br>
                             They vanished immediately, but you fell the gravity is stronger.` },
             style:{"width":"400px"},
-            unlocked(){return hasUpgrade("g",31)}
+            unlocked(){return hasUpgrade("g",31)||player.q.unlocked}
+        },
+        Quark1: {
+            title: "Part I-Quark",
+            body() { return `Finally, the force is strong enough to stop quantoms from vanishing.<br>
+                            They merged up and created a new thing —— quark.<br>
+                            You need more force to combined quarks together.<br>
+                            Luckily, you can use all your genesis to create a quark.<br>
+                            It can make force stronger.` },
+            style:{"width":"400px"},
+            unlocked(){return player.q.unlocked}
         },
     },
 })

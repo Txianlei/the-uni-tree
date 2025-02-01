@@ -49,6 +49,7 @@ function getPointGen() {
     if(hasUpgrade("g",13)) gain=gain.times(upgradeEffect("g",13))
     gain=gain.times(buyableEffect("g",11))
     gain=gain.times(buyableEffect("g",21))
+    if(player.q.unlocked) gain=gain.times(tmp.q.calcqboost)
 
     return gain;
 }
