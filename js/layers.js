@@ -20,6 +20,8 @@ addLayer("g", {
         if(hasUpgrade("g",15)) mult=mult.times(3)
         mult=mult.times(buyableEffect("g",11))
         mult=mult.times(buyableEffect("g",23))
+
+        if(hasMilestone("q",0)) mult=mult.times(tmp.q.quarkboost[1])
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
@@ -44,7 +46,7 @@ addLayer("g", {
                 ["buyables",[1]],
             ]
         },
-        "Quantom":{
+        "Quantum":{
             content:[
                 ["display-text",function() { return `You have <h2 style="color:#DDDDDD;text-shadow:0 0 10px #DDDDDD">${format(player.g.points)}</h2> genesis, producing <h2 style="color:#DDDDDD;text-shadow:0 0 10px #DDDDDD">${format(getPointGen())}</h2> force/s.`},{ "font-size":"15px"},],
                 "blank",
@@ -75,11 +77,11 @@ addLayer("g", {
             },
             canAfford(){return player.g.points.gte(5)&&player.points.gt("1e-39")},
             pay(){return player.g.points=player.g.points.minus(5)},
-            effect(){return player.g.points.add(1).ln().pow(hasUpgrade("g",16)?1.6:1.44)},
+            effect(){return player.g.points.add(1).ln().pow(hasUpgrade("g",16)?1.6:1.44).add(1)},
             effectDisplay(){return `Currently:x${format(upgradeEffect("g",12))}`},
             tooltip(){
-                if(hasUpgrade("g",21)) return `ln(g+1)<b style="color:#00EF00">^1.6`
-                return `ln(g+1)^1.44`
+                if(hasUpgrade("g",21)) return `ln(g+1)<b style="color:#00EF00">^1.6+1`
+                return `ln(g+1)^1.44+1`
             }
         },
         13:{
@@ -170,7 +172,7 @@ addLayer("g", {
             tooltip(){return `(f*1e35+1)^0.2`}
         },
         25:{
-            title:"Quantom tunnel",
+            title:"Quantum tunnel",
             description(){return `Unlock new buyables.`},
             cost(){return new Decimal(1e8)},
             unlocked(){ 
@@ -180,7 +182,7 @@ addLayer("g", {
             pay(){return player.g.points=player.g.points.minus(1e8)},
         },
         31:{
-            title:"Quantom float",
+            title:"Quantum float",
             description(){return `Unlock a new buyable.`},
             cost(){return new Decimal(1e12)},
             unlocked(){ 
@@ -317,6 +319,7 @@ addLayer("q", {
     startData() { return {
         unlocked: false,
 		points: new Decimal(0),
+        upquark: new Decimal(0),
     }},
     color:"rgb(175, 50, 50)",
     requires: new Decimal("1e-13"), // Can be a function that takes requirement increases into account
@@ -345,12 +348,58 @@ addLayer("q", {
                 "blank",
                 "prestige-button",
                 "blank",
+                "milestones",
                 "upgrades",
             ]
         },
+        "Quarks":{
+            content:[
+                ["display-text",function() { return `You have <h2 style="color:rgb(175,50,50);text-shadow:0 0 10px rgb(175,50,50)">${format(player.q.points)}</h2> quark, boost force gain by <h2 style="color:rgb(175,50,50);text-shadow:0 0 10px rgb(175,50,50)">${format(tmp.q.calcqboost)}</h2>`},{ "font-size":"15px"},],
+                "blank",
+                "prestige-button",
+                "blank",
+                ["display-text",function() { return `You have ${format(player.q.upquark)}(+${format(tmp.q.quarkgen[1])}/s) upquark, boost genesis gain by ${format(tmp.q.quarkboost[1])}`},{ "font-size":"15px","color":"red"},],
+                "blank",
+            ],
+            unlocked(){return hasMilestone("q",0)}
+        },
+    },
+    update(diff){
+        player.q.upquark=player.q.upquark.add(tmp.q.quarkgen[1].times(diff))
     },
     calcqboost(){
         return Decimal.pow(11,player.q.points.add(1).log10()).pow(2)
+    },
+    quarkgen(){
+        upgen=new Decimal(0)
+        downgen=new Decimal(0)
+        strangegen=new Decimal(0)
+        charmgen=new Decimal(0)
+        topgen=new Decimal(0)
+        bottomgen=new Decimal(0)
+        if(hasMilestone("q",0)){
+            upgen=player.q.points.pow(0.6667)
+        }
+        return [null,upgen,downgen,strangegen,charmgen,topgen,bottomgen]
+    },
+    quarkboost(){
+        upboost=new Decimal(1)
+        downboost=new Decimal(1)
+        strangeboost=new Decimal(1)
+        charmboost=new Decimal(1)
+        topboost=new Decimal(1)
+        bottomboost=new Decimal(1)
+        if(hasMilestone("q",0)){
+            upboost=Decimal.pow(3,player.q.upquark.add(1).log10())
+        }
+        return [null,upboost,downboost,strangeboost,charmboost,topboost,bottomboost]
+    },
+    milestones:{
+        0: {
+            requirementDescription: "1 quark & 1e-13 force",
+            done() { return player.q.points.gte(1)&&player.points.gte("1e-13")},
+            effectDescription: "Start to generate upquarks.",
+        },
     }
 }),
 addLayer("st", {
@@ -382,6 +431,8 @@ addLayer("st", {
             content:[
                 ["infobox","Quark1"],
                 "blank",
+                ["infobox","Quark2"],
+                "blank",
             ],
             unlocked(){return player.q.unlocked},
         }
@@ -410,7 +461,7 @@ addLayer("st", {
             unlocked(){return getBuyableAmount("g",11).gt(0)||player.q.unlocked}
         },
         Genesis4: {
-            title: "Part IV-Quantom",
+            title: "Part IV-Quantum",
             body() { return `Something strange things appeared in the void.<br>
                             Spend some force to catch it.` },
             style:{"width":"400px"},
@@ -418,20 +469,29 @@ addLayer("st", {
         },
         Genesis5: {
             title: "Part V-Vanish",
-            body() { return `You caught a positive quantom and a negative one.<br>
+            body() { return `You caught a positive quantum and a negative one.<br>
                             They vanished immediately, but you fell the gravity is stronger.` },
             style:{"width":"400px"},
             unlocked(){return hasUpgrade("g",31)||player.q.unlocked}
         },
         Quark1: {
             title: "Part I-Quark",
-            body() { return `Finally, the force is strong enough to stop quantoms from vanishing.<br>
+            body() { return `Finally, the force is strong enough to stop quantums from vanishing.<br>
                             They merged up and created a new thing —— quark.<br>
                             You need more force to combined quarks together.<br>
                             Luckily, you can use all your genesis to create a quark.<br>
                             It can make force stronger.` },
             style:{"width":"400px"},
             unlocked(){return player.q.unlocked}
+        },
+        Quark2: {
+            title: "Part II-Types",
+            body() { return `You found that there're different specifics between quarks.<br>
+                            You decided to divide them into 6 types:<br>
+                            up,down,strange,charm,top and bottom.<br>
+                            Your current force only allows you to create the basic and the lightest one————up quarks.` },
+            style:{"width":"400px"},
+            unlocked(){return hasMilestone("q",0)}
         },
     },
 })

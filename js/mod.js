@@ -51,7 +51,25 @@ function getPointGen() {
     gain=gain.times(buyableEffect("g",21))
     if(player.q.unlocked) gain=gain.times(tmp.q.calcqboost)
 
+
+    if(gain.gte(getForceSoftcap()[1])){
+        let over=gain.sub(getForceSoftcap()[1]).max(0)
+        let low1=over.pow(getForceSoftcap()[2]).add(getForceSoftcap()[1])
+        let high1=over.root(getForceSoftcap()[2]).add(getForceSoftcap()[1])
+        if(low1.gte(1)) gain=high1
+        if(low1.lt(1)) gain=low1
+    }
     return gain;
+}
+
+//Calculate force softcaps
+function getForceSoftcap() {
+    let startsAt=new Decimal("1e-13")
+    let softcap=new Decimal(1)
+    softcap=(player.points.times(1e13).add(1).log10().div(10))
+    if(softcap.gte(1)) softcap=softcap.pow(0.333)
+    softcap=softcap.add(1)
+    return [null,startsAt,softcap]
 }
 
 // Add non-layer related variables that should go into "player"
@@ -64,7 +82,7 @@ var displayThings = [
 
 // Determines when the game "ends"
 function isEndgame() {
-    return getBuyableAmount("g",11).gte(2)
+    return player.q.points.gte(2)
 }
 
 // Background styles
