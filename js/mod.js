@@ -50,14 +50,16 @@ function getPointGen() {
     gain=gain.times(buyableEffect("g",11))
     gain=gain.times(buyableEffect("g",21))
     if(player.q.unlocked) gain=gain.times(tmp.q.calcqboost)
-
+    
+    let softcap=new Decimal(1)
+    softcap=(gain.times(1e13).add(1).log10().div(10)).add(1).pow(0.5)
 
     if(gain.gte(getForceSoftcap()[1])){
         let over=gain.sub(getForceSoftcap()[1]).max(0)
-        let low1=over.pow(getForceSoftcap()[2]).add(getForceSoftcap()[1])
-        let high1=over.root(getForceSoftcap()[2]).add(getForceSoftcap()[1])
-        if(low1.gte(1)) gain=high1
-        if(low1.lt(1)) gain=low1
+        let low1=over.pow(softcap).add(getForceSoftcap()[1])
+        let high1=over.root(softcap).add(getForceSoftcap()[1])
+        if(over.gte(1)) gain=high1
+        if(over.lt(1)) gain=low1
     }
     return gain;
 }
@@ -65,10 +67,21 @@ function getPointGen() {
 //Calculate force softcaps
 function getForceSoftcap() {
     let startsAt=new Decimal("1e-13")
+
+    let gain=new Decimal("1e-40")
+    let base=new Decimal(3)
+    if(hasUpgrade("g",23)) base=base.add(upgradeEffect("g",23))
+    gain=gain.times(Decimal.pow(base,player.g.points.add(1).log10()))
+    if(hasUpgrade("g",11)) gain=gain.times(2)
+    if(hasUpgrade("g",12)) gain=gain.times(upgradeEffect("g",12))
+    if(hasUpgrade("g",13)) gain=gain.times(upgradeEffect("g",13))
+    gain=gain.times(buyableEffect("g",11))
+    gain=gain.times(buyableEffect("g",21))
+    if(player.q.unlocked) gain=gain.times(tmp.q.calcqboost)
+    
     let softcap=new Decimal(1)
-    softcap=(player.points.times(1e13).add(1).log10().div(10))
-    if(softcap.gte(1)) softcap=softcap.pow(0.333)
-    softcap=softcap.add(1)
+    softcap=(gain.times(1e13).add(1).log10().div(10)).add(1).pow(0.5)
+
     return [null,startsAt,softcap]
 }
 
