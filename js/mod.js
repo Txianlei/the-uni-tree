@@ -50,6 +50,7 @@ function getPointGen() {
     gain=gain.times(buyableEffect("g",11))
     gain=gain.times(buyableEffect("g",21))
     if(player.q.unlocked) gain=gain.times(tmp.q.calcqboost)
+    if(hasMilestone("p",1)) gain=gain.times(10)
     
     let softcap=new Decimal(1)
     softcap=(gain.times(1e13).add(1).log10().div(10)).add(1).pow(0.5)
