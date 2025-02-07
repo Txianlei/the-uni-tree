@@ -469,7 +469,7 @@ addLayer("q", {
                 "blank",
                 ["display-text",function() { return `You have <b style="color:blue">${format(player.q.topquark)}</b>(+${format(tmp.q.quarkgen[5])}/s) topquark, first 2 types of quark effect is raised to ^${format(tmp.q.quarkboost[5])}`},{ "font-size":"15px"},],
                 "blank",
-                ["display-text",function() { return `You have <b style="color:purple">${format(player.q.bottomquark)}</b>(+${format(tmp.q.quarkgen[6])}/s) topquark, middle 2 types of quark effect is raised to ^${format(tmp.q.quarkboost[6])}`},{ "font-size":"15px"},],
+                ["display-text",function() { return `You have <b style="color:purple">${format(player.q.bottomquark)}</b>(+${format(tmp.q.quarkgen[6])}/s) bottomquark, middle 2 types of quark effect is raised to ^${format(tmp.q.quarkboost[6])}`},{ "font-size":"15px"},],
                 "blank",
             ],
             unlocked(){return hasMilestone("q",0)}
@@ -763,8 +763,8 @@ addLayer("q", {
             effectDescription: "Start to generate downquarks.",
         },
         2: {
-            requirementDescription: "75 quark & 1e8 force",
-            done() { return player.q.points.gte(75)&&player.points.gte(1e8)},
+            requirementDescription: "75 quark & 1e7 force",
+            done() { return player.q.points.gte(75)&&player.points.gte(1e7)},
             effectDescription: "Start to generate strangequarks.",
         },
         3: {
@@ -814,7 +814,7 @@ addLayer("p", {
     },
     row: 2, // Row the layer is in on the tree (0 is the first row)
     hotkeys: [
-        {key: "q", description: "Q: Reset for quarks", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+        {key: "p", description: "P: Reset for protons", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
     ],
     layerShown(){return hasUpgrade("q",41)||player.p.unlocked},
     branches:["q"],
