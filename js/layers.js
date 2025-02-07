@@ -262,13 +262,13 @@ addLayer("g", {
                                 Next at: ${format(this.cost())} genesis
                                 Amount: ${format(getBuyableAmount("g",11))}
                                 Effect: x${format(this.effect())}` },
-            canAfford() { return player.g.points.gte(this.cost())&&this.unlocked() },
+            canAfford() { return player.g.points.gte(this.cost())&&this.unlocked()&&player.points.gte("1e-39") },
             buy(){
                 if(!tmp.g.buyables[11].canAfford) return
                 if(!hasUpgrade("q",14)) player.g.upgrades = player.g.upgrades.filter(item => item > "24")
                 if(!hasUpgrade("q",23)){
                     player.g.points=new Decimal(0)
-                    layer.points=new Decimal("1e-39")
+                    player.points=new Decimal("1e-39")
                 }
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
             },
