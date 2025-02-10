@@ -50,10 +50,10 @@ function getPointGen() {
     gain=gain.times(buyableEffect("g",11))
     gain=gain.times(buyableEffect("g",21))
     if(player.q.unlocked) gain=gain.times(tmp.q.calcqboost)
-    if(hasMilestone("p",1)) gain=gain.times(10)
+    if(hasMilestone("p",0)) gain=gain.times(10)
     
     let softcap=new Decimal(1)
-    softcap=(gain.times(1e13).add(1).log10().div(10)).add(1).pow(0.5)
+    softcap=(gain.div(getForceSoftcap()[1]).add(1).log10().div(10)).add(1).pow(0.5)
 
     if(gain.gte(getForceSoftcap()[1])){
         let over=gain.sub(getForceSoftcap()[1]).max(0)
@@ -68,6 +68,7 @@ function getPointGen() {
 //Calculate force softcaps
 function getForceSoftcap() {
     let startsAt=new Decimal("1e-13")
+    if(hasUpgrade("p",11)) startsAt=new Decimal(1)
 
     let gain=new Decimal("1e-40")
     let base=new Decimal(3)
@@ -79,9 +80,10 @@ function getForceSoftcap() {
     gain=gain.times(buyableEffect("g",11))
     gain=gain.times(buyableEffect("g",21))
     if(player.q.unlocked) gain=gain.times(tmp.q.calcqboost)
+    if(hasMilestone("p",0)) gain=gain.times(10)
     
     let softcap=new Decimal(1)
-    softcap=(gain.times(1e13).add(1).log10().div(10)).add(1).pow(0.5)
+    softcap=(gain.div(startsAt).add(1).log10().div(10)).add(1).pow(0.5)
 
     return [null,startsAt,softcap]
 }

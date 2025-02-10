@@ -19,6 +19,8 @@ addLayer("g", {
         if(hasUpgrade("g",32)) mult=mult.times(upgradeEffect("g",32))
         if(hasUpgrade("g",15)) mult=mult.times(3)
         if(hasUpgrade("q",25)) mult=mult.times(upgradeEffect("q",25))
+        if(hasUpgrade("q",43)) mult=mult.times(upgradeEffect("q",43))
+        if(hasUpgrade("p",13)) mult=mult.times(upgradeEffect("p",13))
         mult=mult.times(buyableEffect("g",11))
         mult=mult.times(buyableEffect("g",23))
 
@@ -68,12 +70,12 @@ addLayer("g", {
         }
     },
     update(diff){
-        if(hasUpgrade("q",23)) layers.g.buyables[11].buy()
-        if(hasUpgrade("q",33)) layers.g.buyables[21].buy()
-        if(hasUpgrade("q",33)) layers.g.buyables[22].buy()
-        if(hasUpgrade("q",33)) layers.g.buyables[23].buy()
-        if(hasUpgrade("q",33)) layers.g.buyables[31].buy()
-        if(hasUpgrade("q",33)) layers.g.buyables[32].buy()
+        if(hasUpgrade("q",23)||hasMilestone("p",0)) layers.g.buyables[11].buy()
+        if(hasUpgrade("q",33)||hasMilestone("p",0)) layers.g.buyables[21].buy()
+        if(hasUpgrade("q",33)||hasMilestone("p",0)) layers.g.buyables[22].buy()
+        if(hasUpgrade("q",33)||hasMilestone("p",0)) layers.g.buyables[23].buy()
+        if(hasUpgrade("q",33)||hasMilestone("p",0)) layers.g.buyables[31].buy()
+        if(hasUpgrade("q",33)||hasMilestone("p",0)) layers.g.buyables[32].buy()
     },
     upgrades:{
         11:{
@@ -283,7 +285,7 @@ addLayer("g", {
         },
         21:{
             title:"Positive",
-            cost(x) { return Decimal.pow(10,Decimal.pow(x.add(1),(hasMilestone("p",1)?1.1:1.25))).times("8e-32")},
+            cost(x) { return Decimal.pow(10,Decimal.pow(x.add(1),(hasMilestone("p",0)?1.1:1.25))).times("8e-32")},
             effect(x) { 
                 let base=new Decimal(5)
                 if(hasUpgrade("q",11)) base=base.add(1.5)
@@ -311,7 +313,11 @@ addLayer("g", {
         22:{
             title:"Vanish",
             cost(x) { return Decimal.pow(1000,x.pow(1.5)).times("1e-25") },
-            effect(x) { return this.unlocked()? x.times(0.5):new Decimal(0)},
+            effect(x) { 
+                base=new Decimal(0.5)
+                if(hasMilestone("p",1)) base=base.add(0.1)
+                return this.unlocked()? x.times(base):new Decimal(0)
+            },
             display() { return `Give free "Gravitational field"s.
                                 Cost: ${format(this.cost())} force
                                 Amount: ${format(getBuyableAmount("g",22))}
@@ -431,6 +437,8 @@ addLayer("q", {
         mult = new Decimal(1)
         if(hasMilestone("q",3)) mult=mult.times(tmp.q.quarkboost[4])
         if(hasUpgrade("q",25)) mult=mult.times(upgradeEffect("q",25))
+        if(hasUpgrade("q",42)) mult=mult.times(upgradeEffect("q",42))
+        if(hasUpgrade("p",12)) mult=mult.times(upgradeEffect("p",12))
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
@@ -442,6 +450,14 @@ addLayer("q", {
     ],
     layerShown(){return hasUpgrade("g",33)||player.q.unlocked},
     branches:["g"],
+    doReset(resettingLayer){
+        let keep=[]
+        if(hasMilestone("p",2)) keep.push("upgrades")
+        if (layers[resettingLayer].row > this.row) {
+            player.subtabs.q.mainTabs="Main"
+            layerDataReset("q", keep)
+        }
+    },
     tabFormat:{
         "Main":{
             content:[
@@ -467,9 +483,9 @@ addLayer("q", {
                 "blank",
                 ["display-text",function() { return `You have <b style="color:green">${format(player.q.charmquark)}</b>(+${format(tmp.q.quarkgen[4])}/s) charmquark, boost quark gain by ${format(tmp.q.quarkboost[4])}`},{ "font-size":"15px"},],
                 "blank",
-                ["display-text",function() { return `You have <b style="color:blue">${format(player.q.topquark)}</b>(+${format(tmp.q.quarkgen[5])}/s) topquark, first 2 types of quark effect is raised to ^${format(tmp.q.quarkboost[5])}`},{ "font-size":"15px"},],
+                ["display-text",function() { return `You have <b style="color:cyan">${format(player.q.topquark)}</b>(+${format(tmp.q.quarkgen[5])}/s) topquark, first 2 types of quark effect is raised to ^${format(tmp.q.quarkboost[5])}`},{ "font-size":"15px"},],
                 "blank",
-                ["display-text",function() { return `You have <b style="color:purple">${format(player.q.bottomquark)}</b>(+${format(tmp.q.quarkgen[6])}/s) bottomquark, middle 2 types of quark effect is raised to ^${format(tmp.q.quarkboost[6])}`},{ "font-size":"15px"},],
+                ["display-text",function() { return `You have <b style="color:violet">${format(player.q.bottomquark)}</b>(+${format(tmp.q.quarkgen[6])}/s) bottomquark, middle 2 types of quark effect is raised to ^${format(tmp.q.quarkboost[6])}`},{ "font-size":"15px"},],
                 "blank",
             ],
             unlocked(){return hasMilestone("q",0)}
@@ -484,7 +500,9 @@ addLayer("q", {
         player.q.bottomquark=player.q.bottomquark.add(tmp.q.quarkgen[6].times(diff))
     },
     calcqboost(){
-        return Decimal.pow(11,player.q.points.add(1).log10()).pow(2)
+        base=new Decimal(11)
+        if(hasUpgrade("p",15)) base=base.add(1)
+        return Decimal.pow(base,player.q.points.add(1).log10()).pow(2)
     },
     quarkgen(){
         upgen=new Decimal(0)
@@ -497,37 +515,49 @@ addLayer("q", {
             upgen=player.q.points.pow(0.6667)
             if(hasUpgrade("q",13)) upgen=upgen.times(upgradeEffect("q",13))
             if(hasUpgrade("q",35)) upgen=upgen.times(upgradeEffect("q",35))
+            if(hasUpgrade("p",14)) upgen=upgen.times(upgradeEffect("p",14))
             upgen=upgen.times(buyableEffect("g",31))
+            if(hasMilestone("p",1)) upgen=upgen.pow(1.25)
         }
         if(hasMilestone("q",1)){
             downgen=player.q.points.pow(0.3333)
             if(hasUpgrade("q",15)) downgen=downgen.times(upgradeEffect("q",15))
             if(hasUpgrade("q",35)) downgen=downgen.times(upgradeEffect("q",35))
+            if(hasUpgrade("p",14)) downgen=downgen.times(upgradeEffect("p",14))
             downgen=downgen.times(buyableEffect("g",31))
+            if(hasMilestone("p",1)) downgen=downgen.pow(1.25)
         }
         if(hasMilestone("q",2)){
             strangegen=upgen.pow(0.25)
             if(hasUpgrade("q",21)) strangegen=strangegen.times(upgradeEffect("q",21))
             if(hasUpgrade("q",35)) strangegen=strangegen.times(upgradeEffect("q",35))
+            if(hasUpgrade("p",14)) strangegen=strangegen.times(upgradeEffect("p",14))
             strangegen=strangegen.times(buyableEffect("g",31))
+            if(hasMilestone("p",1)) strangegen=strangegen.pow(1.25)
         }
         if(hasMilestone("q",3)){
             charmgen=downgen.pow(0.25)
             if(hasUpgrade("q",24)) charmgen=charmgen.times(upgradeEffect("q",24))
             if(hasUpgrade("q",35)) charmgen=charmgen.times(upgradeEffect("q",35))
+            if(hasUpgrade("p",14)) charmgen=charmgen.times(upgradeEffect("p",14))
             charmgen=charmgen.times(buyableEffect("g",32))
+            if(hasMilestone("p",1)) charmgen=charmgen.pow(1.25)
         }
         if(hasMilestone("q",4)){
             topgen=strangegen.pow(0.1)
             if(hasUpgrade("q",32)) topgen=topgen.times(upgradeEffect("q",32))
             if(hasUpgrade("q",35)) topgen=topgen.times(upgradeEffect("q",35))
+            if(hasUpgrade("p",14)) topgen=topgen.times(upgradeEffect("p",14))
             topgen=topgen.times(buyableEffect("g",32))
+            if(hasMilestone("p",1)) topgen=topgen.pow(1.25)
         }
         if(hasMilestone("q",5)){
             bottomgen=charmgen.pow(0.1)
             if(hasUpgrade("q",34)) bottomgen=bottomgen.times(upgradeEffect("q",34))
             if(hasUpgrade("q",35)) bottomgen=bottomgen.times(upgradeEffect("q",35))
+            if(hasUpgrade("p",14)) bottomgen=bottomgen.times(upgradeEffect("p",14))
             bottomgen=bottomgen.times(buyableEffect("g",32))
+            if(hasMilestone("p",1)) bottomgen=bottomgen.pow(1.25)
         }
         return [null,upgen,downgen,strangegen,charmgen,topgen,bottomgen]
     },
@@ -667,7 +697,7 @@ addLayer("q", {
         },
         25:{
             title:"Genesis chain",
-            description(){return `Boost quark gain based on genesis.`},
+            description(){return `Boost genesis and quark gain based on genesis.`},
             cost(){return new Decimal(1e6)},
             unlocked(){ 
                 return hasUpgrade("q",23)&&hasUpgrade("q",24)
@@ -736,7 +766,7 @@ addLayer("q", {
             },
             canAfford(){return player.q.points.gte(1e17)},
             pay(){return player.q.points=player.q.points.minus(1e17)},
-            effect(){return player.points.pow(2).add(1).ln()},
+            effect(){return player.points.pow(2).add(1).ln().add(1)},
             effectDisplay(){return `Currently:x${format(upgradeEffect("q",35))}`},
             tooltip(){return `ln(f^2+1)+1`}
         },
@@ -749,6 +779,32 @@ addLayer("q", {
             },
             canAfford(){return player.q.points.gte(1e20)},
             pay(){return player.q.points=player.q.points.minus(1e20)},
+        },
+        42:{
+            title:"Quark defense",
+            description(){return `Boost quark gain based on itself.`},
+            cost(){return new Decimal(1e34)},
+            unlocked(){ 
+                return hasMilestone("p",3)
+            },
+            canAfford(){return player.q.points.gte(1e34)},
+            pay(){return player.q.points=player.q.points.minus(1e34)},
+            effect(){return player.q.points.pow(0.02).add(1)},
+            effectDisplay(){return `Currently:x${format(upgradeEffect("q",42))}`},
+            tooltip(){return `q^0.02+1`}
+        },
+        43:{
+            title:"Quark pulling",
+            description(){return `"Pulling" affects genesis gain with a weaker effect.`},
+            cost(){return new Decimal(1e35)},
+            unlocked(){ 
+                return hasMilestone("p",3)
+            },
+            canAfford(){return player.q.points.gte(1e35)},
+            pay(){return player.q.points=player.q.points.minus(1e35)},
+            effect(){return upgradeEffect("g",13).pow(0.25)},
+            effectDisplay(){return `Currently:x${format(upgradeEffect("q",43))}`},
+            tooltip(){return `eff^0.25`}
         },
     },
     milestones:{
@@ -791,12 +847,6 @@ addLayer("p", {
     startData() { return {
         unlocked: false,
 		points: new Decimal(0),
-        upquark: new Decimal(0),
-        downquark: new Decimal(0),
-        strangequark: new Decimal(0),
-        charmquark: new Decimal(0),
-        topquark: new Decimal(0),
-        bottomquark: new Decimal(0),
     }},
     color:"rgb(0, 60, 235)",
     requires: new Decimal(1e20), // Can be a function that takes requirement increases into account
@@ -804,9 +854,10 @@ addLayer("p", {
     baseResource: "quark", // Name of resource prestige is based on
     baseAmount() {return player.q.points}, // Get the current amount of baseResource
     type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
-    exponent: 0.01, // Prestige currency exponent
+    exponent: 0.04, // Prestige currency exponent
     gainMult() { // Calculate the multiplier for main currency from bonuses
         mult = new Decimal(1)
+        if(hasUpgrade("p",21)) mult=mult.times(2)
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
@@ -840,11 +891,97 @@ addLayer("p", {
     },
     update(diff){
     },
+    upgrades:{
+        11:{
+            title:"Softcap delayer",
+            description(){return `Force softcap starts at 1 instead of 1e-13.`},
+            cost(){return new Decimal(1)},
+            unlocked(){ 
+                return player.p.unlocked
+            },
+            canAfford(){return player.p.points.gte(1)},
+            pay(){return player.p.points=player.p.points.minus(1)},
+        },
+        12:{
+            title:"Proton boost I",
+            description(){return `Boost quark gain based on proton.`},
+            cost(){return new Decimal(1)},
+            unlocked(){ 
+                return hasUpgrade("p",11)
+            },
+            canAfford(){return player.p.points.gte(1)},
+            pay(){return player.p.points=player.p.points.minus(1)},
+            effect(){return Decimal.pow(1.2,player.p.points.add(1).times(10).ln().times(1.5))},
+            effectDisplay(){return `Currently:x${format(upgradeEffect("p",12))}`},
+            tooltip(){return `1.2^(ln((p+1)*10)*1.5)`}
+        },
+        13:{
+            title:"Proton boost II",
+            description(){return `Boost genesis gain based on proton.`},
+            cost(){return new Decimal(1)},
+            unlocked(){ 
+                return hasUpgrade("p",11)
+            },
+            canAfford(){return player.p.points.gte(1)},
+            pay(){return player.p.points=player.p.points.minus(1)},
+            effect(){return Decimal.pow(2,player.p.points.add(1).times(10).log10())},
+            effectDisplay(){return `Currently:x${format(upgradeEffect("p",13))}`},
+            tooltip(){return `2^(log10((p+1)*10))`}
+        },
+        14:{
+            title:"Proton boost III",
+            description(){return `Boost 6 types of quark gain based on proton.`},
+            cost(){return new Decimal(1)},
+            unlocked(){ 
+                return hasUpgrade("p",11)
+            },
+            canAfford(){return player.p.points.gte(1)},
+            pay(){return player.p.points=player.p.points.minus(1)},
+            effect(){return player.p.points.add(1).times(10).pow(0.4)},
+            effectDisplay(){return `Currently:x${format(upgradeEffect("p",14))}`},
+            tooltip(){return `((p+1)*10)^0.4`}
+        },
+        15:{
+            title:"Proton boost IV",
+            description(){return `Quark boost base +1.`},
+            cost(){return new Decimal(3)},
+            unlocked(){ 
+                return hasUpgrade("p",12)&&hasUpgrade("p",13)&&hasUpgrade("p",14)
+            },
+            canAfford(){return player.p.points.gte(3)},
+            pay(){return player.p.points=player.p.points.minus(3)},
+        },
+        21:{
+            title:"Multiple proton",
+            description(){return `Double proton gain.`},
+            cost(){return new Decimal(5)},
+            unlocked(){ 
+                return hasUpgrade("p",15)
+            },
+            canAfford(){return player.p.points.gte(5)},
+            pay(){return player.p.points=player.p.points.minus(5)},
+        },
+    },
     milestones:{
         0: {
             requirementDescription: "1 proton",
             done() { return player.p.points.gte(1)},
-            effectDescription: `10x force gain, the exponent growth of "Positive" price is weaker.`,
+            effectDescription: `10x force gain, the exponent growth of "Positive" price is weaker.<br>Keep genesis automations.`,
+        },
+        1: {
+            requirementDescription: "2 proton",
+            done() { return player.p.points.gte(2)},
+            effectDescription: `All types of quark gain is raised to ^1.25, add 0.1 to "Vanish" base.`,
+        },
+        2: {
+            requirementDescription: "3 proton",
+            done() { return player.p.points.gte(3)},
+            effectDescription: `Keep quark upgrades on resets.`,
+        },
+        3: {
+            requirementDescription: "10 proton",
+            done() { return player.p.points.gte(10)},
+            effectDescription: `Unlock more quark upgrades.`,
         },
     }
 }),
@@ -886,7 +1023,14 @@ addLayer("st", {
                 ["infobox","Quark5"],
                 "blank",
             ],
-            unlocked(){return player.q.unlocked},
+            unlocked(){return player.q.unlocked||player.p.unlocked},
+        },
+        "Chapter III":{
+            content:[
+                ["infobox","Proton"],
+                "blank",
+            ],
+            unlocked(){return player.p.unlocked},
         }
     },
     infoboxes: {
@@ -903,28 +1047,28 @@ addLayer("st", {
                            But it is still weaker than you thought, you should find a way to make it faster.....
                 ` },
             style:{"width":"400px"},
-            unlocked(){return hasUpgrade("g",11)||getBuyableAmount("g",11).gt(0)||player.q.unlocked}
+            unlocked(){return hasUpgrade("g",11)||getBuyableAmount("g",11).gt(0)||player.q.unlocked||player.p.unlocked}
         },
         Genesis3: {
             title: "Part III-Gravity",
             body() { return `The force is strong enough to pull each other together.<br>
                             These makes produce faster.` },
             style:{"width":"400px"},
-            unlocked(){return getBuyableAmount("g",11).gt(0)||player.q.unlocked}
+            unlocked(){return getBuyableAmount("g",11).gt(0)||player.q.unlocked||player.p.unlocked}
         },
         Genesis4: {
             title: "Part IV-Quantum",
             body() { return `Something strange things appeared in the void.<br>
                             Spend some force to catch it.` },
             style:{"width":"400px"},
-            unlocked(){return hasUpgrade("g",25)||player.q.unlocked}
+            unlocked(){return hasUpgrade("g",25)||player.q.unlocked||player.p.unlocked}
         },
         Genesis5: {
             title: "Part V-Vanish",
             body() { return `You caught a positive quantum and a negative one.<br>
                             They vanished immediately, but you fell the gravity is stronger.` },
             style:{"width":"400px"},
-            unlocked(){return hasUpgrade("g",31)||player.q.unlocked}
+            unlocked(){return hasUpgrade("g",31)||player.q.unlocked||player.p.unlocked}
         },
         Quark1: {
             title: "Part I-Quark",
@@ -934,7 +1078,7 @@ addLayer("st", {
                             Luckily, you can use all your genesis to create a quark.<br>
                             It can make force stronger.` },
             style:{"width":"400px"},
-            unlocked(){return player.q.unlocked}
+            unlocked(){return player.q.unlocked||player.p.unlocked}
         },
         Quark2: {
             title: "Part II-Types",
@@ -943,7 +1087,7 @@ addLayer("st", {
                             up,down,strange,charm,top and bottom.<br>
                             Your current force only allows you to create the basic and the lightest one————up quarks.` },
             style:{"width":"400px"},
-            unlocked(){return hasMilestone("q",0)}
+            unlocked(){return hasMilestone("q",0)||player.p.unlocked}
         },
         Quark3: {
             title: "Part III-Up and down",
@@ -952,7 +1096,7 @@ addLayer("st", {
                             Soon, you'll have your force exceed 1.<br>
                             But there's something slows down the production...` },
             style:{"width":"400px"},
-            unlocked(){return hasMilestone("q",1)}
+            unlocked(){return hasMilestone("q",1)||player.p.unlocked}
         },
         Quark4: {
             title: "Part IV-Strange and charm",
@@ -961,7 +1105,7 @@ addLayer("st", {
                             The new types are very unstable that they can become up/down quark instantly.<br>
                             So their production are based on your up/down quark production.` },
             style:{"width":"400px"},
-            unlocked(){return hasMilestone("q",3)}
+            unlocked(){return hasMilestone("q",3)||player.p.unlocked}
         },
         Quark5: {
             title: "Part V-Top and bottom",
@@ -970,7 +1114,16 @@ addLayer("st", {
                             They're so heavy that they could affect the lighter one's effect.<br>
                             Your quarks started to gathering, let's see what would happen...` },
             style:{"width":"400px"},
-            unlocked(){return hasMilestone("q",5)}
+            unlocked(){return hasMilestone("q",5)||player.p.unlocked}
+        },
+        Proton1: {
+            title: "Part I-Proton",
+            body() { return `By crunching two up quarks and one downquark.<br>
+                            You made a new particle called proton.<br>
+                            The energy of crunching is so huge that all of your quarks disappeared.<br>
+                            What will be the boost of proton?` },
+            style:{"width":"400px"},
+            unlocked(){return player.p.unlocked}
         },
     },
 })
