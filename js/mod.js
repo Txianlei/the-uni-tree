@@ -53,7 +53,9 @@ function getPointGen() {
     if(hasMilestone("p",0)) gain=gain.times(10)
     
     let softcap=new Decimal(1)
-    softcap=(gain.div(getForceSoftcap()[1]).add(1).log10().div(10)).add(1).pow(0.5)
+    let softpower=new Decimal(0.5)
+    if(hasUpgrade("p",31)) softpower=softpower.times(0.98)
+    softcap=(gain.div(getForceSoftcap()[1]).add(1).log10().div(10)).add(1).pow(softpower)
 
     if(gain.gte(getForceSoftcap()[1])){
         let over=gain.sub(getForceSoftcap()[1]).max(0)
@@ -69,7 +71,8 @@ function getPointGen() {
 function getForceSoftcap() {
     let startsAt=new Decimal("1e-13")
     if(hasUpgrade("p",11)) startsAt=new Decimal(1)
-
+    if(player.e.ischarge3) startsAt=startsAt.times(tmp.e.chargeeff[3])
+     
     let gain=new Decimal("1e-40")
     let base=new Decimal(3)
     if(hasUpgrade("g",23)) base=base.add(upgradeEffect("g",23))
@@ -83,7 +86,9 @@ function getForceSoftcap() {
     if(hasMilestone("p",0)) gain=gain.times(10)
     
     let softcap=new Decimal(1)
-    softcap=(gain.div(startsAt).add(1).log10().div(10)).add(1).pow(0.5)
+    let softpower=new Decimal(0.5)
+    if(hasUpgrade("p",31)) softpower=softpower.times(0.98)
+    softcap=(gain.div(startsAt).add(1).log10().div(10)).add(1).pow(softpower)
 
     return [null,startsAt,softcap]
 }
@@ -98,7 +103,7 @@ var displayThings = [
 
 // Determines when the game "ends"
 function isEndgame() {
-    return player.q.points.gte(2)
+    return player.e.points.gte(3)
 }
 
 // Background styles
