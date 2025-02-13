@@ -1042,7 +1042,7 @@ addLayer("p", {
             },
             canAfford(){return player.p.points.gte(30)},
             pay(){return player.p.points=player.p.points.minus(30)},
-            effect(){return Decimal.pow(1.25,player.q.points.add(1).log10().sub(35).max(0))},
+            effect(){return Decimal.pow(1.2,player.q.points.add(1).log10().sub(35).max(0))},
             effectDisplay(){return `Currently:x${format(upgradeEffect("p",25))}`},
             tooltip(){return `1.2^(log10(q+1)-35)`}
         },
@@ -1117,7 +1117,7 @@ addLayer("e", {
     baseResource: "force", // Name of resource prestige is based on
     baseAmount() {return player.points}, // Get the current amount of baseResource
     type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
-    exponent(){return 3}, // Prestige currency exponent
+    exponent(){return 2}, // Prestige currency exponent
     base(){return 10},
     gainMult() { // Calculate the multiplier for main currency from bonuses
         mult = new Decimal(1)
