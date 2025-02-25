@@ -280,7 +280,7 @@ addLayer("g", {
             buy(){
                 if(!tmp.g.buyables[11].canAfford) return
                 if(!hasUpgrade("q",14)) player.g.upgrades = player.g.upgrades.filter(item => item > "24")
-                if(!hasUpgrade("q",23)){
+                if(!(hasUpgrade("q",23)||hasMilestone("p",0))){
                     player.g.points=new Decimal(0)
                     player.points=new Decimal("1e-39")
                 }
@@ -310,7 +310,7 @@ addLayer("g", {
             canAfford() { return player.points.gt(this.cost())&&this.unlocked() },
             buy(){
                 if(!tmp.g.buyables[21].canAfford) return
-                if(!hasUpgrade("q",33)) player.points=player.points.sub(this.cost())
+                if(!(hasUpgrade("q",33)||hasMilestone("p",0))) player.points=player.points.sub(this.cost())
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
             },
             buyMax() {
@@ -337,7 +337,7 @@ addLayer("g", {
             canAfford() { return player.points.gt(this.cost())&&this.unlocked() },
             buy(){
                 if(!tmp.g.buyables[22].canAfford) return
-                if(!hasUpgrade("q",33)) player.points=player.points.sub(this.cost())
+                if(!(hasUpgrade("q",33)||hasMilestone("p",0))) player.points=player.points.sub(this.cost())
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
             },
             buyMax() {
@@ -365,7 +365,7 @@ addLayer("g", {
             canAfford() { return player.points.gt(this.cost())&&this.unlocked() },
             buy(){
                 if(!tmp.g.buyables[23].canAfford) return
-                if(!hasUpgrade("q",33)) player.points=player.points.sub(this.cost())
+                if(!(hasUpgrade("q",33)||hasMilestone("p",0))) player.points=player.points.sub(this.cost())
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
             },
             buyMax() {
@@ -389,7 +389,7 @@ addLayer("g", {
             purchaseLimit:100,
             buy(){
                 if(!tmp.g.buyables[31].canAfford) return
-                if(!hasUpgrade("q",33)) player.points=player.points.sub(this.cost())
+                if(!(hasUpgrade("q",33)||hasMilestone("p",0))) player.points=player.points.sub(this.cost())
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1).min(100))
             },
             buyMax() {
@@ -412,7 +412,7 @@ addLayer("g", {
             canAfford() { return player.points.gt(this.cost())&&this.unlocked() },
             buy(){
                 if(!tmp.g.buyables[32].canAfford) return
-                if(!hasUpgrade("q",33)) player.points=player.points.sub(this.cost())
+                if(!(hasUpgrade("q",33)||hasMilestone("p",0))) player.points=player.points.sub(this.cost())
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
             },
             buyMax() {
