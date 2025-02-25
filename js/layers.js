@@ -279,7 +279,7 @@ addLayer("g", {
             canAfford() { return player.g.points.gte(this.cost())&&this.unlocked()&&player.points.gte("1e-39") },
             buy(){
                 if(!tmp.g.buyables[11].canAfford) return
-                if(!hasUpgrade("q",14)) player.g.upgrades = player.g.upgrades.filter(item => item > "24")
+                if(!(hasUpgrade("q",14)||hasMilestone("p",0))) player.g.upgrades = player.g.upgrades.filter(item => item > "24")
                 if(!(hasUpgrade("q",23)||hasMilestone("p",0))){
                     player.g.points=new Decimal(0)
                     player.points=new Decimal("1e-39")
