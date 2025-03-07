@@ -5,6 +5,7 @@ addLayer("g", {
     startData() { return {
         unlocked: true,
 		points: new Decimal(0),
+        purchaseleft:20,
     }},
     color: "#DDDDDD",
     requires: new Decimal("1e-39"), // Can be a function that takes requirement increases into account
@@ -34,6 +35,7 @@ addLayer("g", {
     gainExp() { // Calculate the exponent on main currency from bonuses
         exp = new Decimal(1)
         if(player.e.ischarge1) exp=exp.times(tmp.e.chargeeff[1])
+        if(player.n.unlocked) exp=exp.times(buyableEffect("a",12))
         if(inChallenge("n",11)) exp=exp.times(0.3)
         return exp
     },
@@ -48,6 +50,9 @@ addLayer("g", {
             if(!hasUpgrade("q",22)) player.subtabs.g.mainTabs="Main"
             layerDataReset("g", keep)
         }
+    },
+    update(diff){
+        if(player.points.eq(0)&&player.g.points.eq(0)) player.g.points=new Decimal(1)
     },
     layerShown(){return true},
     passiveGeneration(){return hasUpgrade("q",31)?upgradeEffect("q",31):0},
@@ -72,17 +77,19 @@ addLayer("g", {
                 "prestige-button",
                 "blank",
                 ["buyables",[2,3]],
+                "blank",
+                ["display-text",function() { return inChallenge("n",22)?`Purchases left:${player.g.purchaseleft}.`:``},{ "font-size":"15px"},],
             ],
             unlocked(){return hasUpgrade("g",25)}
         }
     },
     update(diff){
-        if(hasUpgrade("q",23)||hasMilestone("p",0)) layers.g.buyables[11].buy()
-        if(hasUpgrade("q",33)||hasMilestone("p",0)) layers.g.buyables[21].buy()
-        if(hasUpgrade("q",33)||hasMilestone("p",0)) layers.g.buyables[22].buy()
-        if(hasUpgrade("q",33)||hasMilestone("p",0)) layers.g.buyables[23].buy()
-        if(hasUpgrade("q",33)||hasMilestone("p",0)) layers.g.buyables[31].buy()
-        if(hasUpgrade("q",33)||hasMilestone("p",0)) layers.g.buyables[32].buy()
+        if((hasUpgrade("q",23)||hasMilestone("p",0))) layers.g.buyables[11].buy()
+        if((hasUpgrade("q",33)||hasMilestone("p",0))&&(!inChallenge("n",22))) layers.g.buyables[21].buy()
+        if((hasUpgrade("q",33)||hasMilestone("p",0))&&(!inChallenge("n",22))) layers.g.buyables[22].buy()
+        if((hasUpgrade("q",33)||hasMilestone("p",0))&&(!inChallenge("n",22))) layers.g.buyables[23].buy()
+        if((hasUpgrade("q",33)||hasMilestone("p",0))&&(!inChallenge("n",22))) layers.g.buyables[31].buy()
+        if((hasUpgrade("q",33)||hasMilestone("p",0))&&(!inChallenge("n",22))) layers.g.buyables[32].buy()
     },
     upgrades:{
         11:{
@@ -307,8 +314,9 @@ addLayer("g", {
                                 Cost: ${format(this.cost())} force
                                 Amount: ${format(getBuyableAmount("g",21))}
                                 Effect: x${format(this.effect())}` },
-            canAfford() { return player.points.gt(this.cost())&&this.unlocked() },
+            canAfford() { return player.points.gt(this.cost())&&this.unlocked()&&(player.g.purchaseleft!=0)},
             buy(){
+                if(inChallenge("n",22)) player.g.purchaseleft--; 
                 if(!tmp.g.buyables[21].canAfford) return
                 if(!(hasUpgrade("q",33)||hasMilestone("p",0))) player.points=player.points.sub(this.cost())
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
@@ -334,8 +342,9 @@ addLayer("g", {
                                 Cost: ${format(this.cost())} force
                                 Amount: ${format(getBuyableAmount("g",22))}
                                 Effect: +${format(this.effect())}` },
-            canAfford() { return player.points.gt(this.cost())&&this.unlocked() },
+            canAfford() { return player.points.gt(this.cost())&&this.unlocked()&&(player.g.purchaseleft!=0)},
             buy(){
+                if(inChallenge("n",22)) player.g.purchaseleft--;
                 if(!tmp.g.buyables[22].canAfford) return
                 if(!(hasUpgrade("q",33)||hasMilestone("p",0))) player.points=player.points.sub(this.cost())
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
@@ -362,8 +371,9 @@ addLayer("g", {
                                 Cost: ${format(this.cost())} force
                                 Amount: ${format(getBuyableAmount("g",23))}
                                 Effect: x${format(this.effect())}` },
-            canAfford() { return player.points.gt(this.cost())&&this.unlocked() },
+            canAfford() { return player.points.gt(this.cost())&&this.unlocked()&&(player.g.purchaseleft!=0)},
             buy(){
+                if(inChallenge("n",22)) player.g.purchaseleft--;
                 if(!tmp.g.buyables[23].canAfford) return
                 if(!(hasUpgrade("q",33)||hasMilestone("p",0))) player.points=player.points.sub(this.cost())
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
@@ -385,9 +395,10 @@ addLayer("g", {
                                 Cost: ${format(this.cost())} force
                                 Amount: ${format(getBuyableAmount("g",31))}/100
                                 Effect: x${format(this.effect())}` },
-            canAfford() { return player.points.gt(this.cost())&&this.unlocked() },
+            canAfford() { return player.points.gt(this.cost())&&this.unlocked()&&(player.g.purchaseleft!=0)},
             purchaseLimit:100,
             buy(){
+                if(inChallenge("n",22)) player.g.purchaseleft--;
                 if(!tmp.g.buyables[31].canAfford) return
                 if(!(hasUpgrade("q",33)||hasMilestone("p",0))) player.points=player.points.sub(this.cost())
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1).min(100))
@@ -409,8 +420,9 @@ addLayer("g", {
                                 Cost: ${format(this.cost())} force
                                 Amount: ${format(getBuyableAmount("g",32))}
                                 Effect: x${format(this.effect())}` },
-            canAfford() { return player.points.gt(this.cost())&&this.unlocked() },
+            canAfford() { return player.points.gt(this.cost())&&this.unlocked()&&(player.g.purchaseleft!=0)},
             buy(){
+                if(inChallenge("n",22)) player.g.purchaseleft--;
                 if(!tmp.g.buyables[32].canAfford) return
                 if(!(hasUpgrade("q",33)||hasMilestone("p",0))) player.points=player.points.sub(this.cost())
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
@@ -446,7 +458,11 @@ addLayer("q", {
     baseResource: "force", // Name of resource prestige is based on
     baseAmount() {return player.points}, // Get the current amount of baseResource
     type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
-    exponent: 0.1, // Prestige currency exponent
+    exponent(){
+        let exp=0.1
+        if(hasUpgrade("n",34)) exp+=0.01
+        return exp
+    }, // Prestige currency exponent
     gainMult() { // Calculate the multiplier for main currency from bonuses
         mult = new Decimal(1)
         if(hasMilestone("q",3)) mult=mult.times(tmp.q.quarkboost[4])
@@ -459,6 +475,7 @@ addLayer("q", {
         exp = new Decimal(1)
         if(player.e.ischarge2) exp=exp.times(tmp.e.chargeeff[2])
         if(hasChallenge("n",21)) exp=exp.times(1.05)
+        if(player.a.unlocked) exp=exp.times(buyableEffect("a",13))
         if(inChallenge("n",21)) exp=exp.times(0.1)
         return exp
     },
@@ -904,14 +921,19 @@ addLayer("p", {
         if(hasUpgrade("p",33)) mult=mult.times(upgradeEffect("p",33))
         if(hasUpgrade("p",43)) mult=mult.times(upgradeEffect("p",43))
         if(hasUpgrade("n",23)) mult=mult.times(upgradeEffect("n",23))
+        if(hasUpgrade("p",44)) mult=mult.times(upgradeEffect("p",44))
+        if(hasMilestone("a",0)) mult=mult.times(10)
         if(hasChallenge("n",11)) mult=mult.times(10)
         if(hasChallenge("n",12)) mult=mult.times(25)
         if(hasChallenge("n",21)) mult=mult.times(100)
+        if(player.a.unlocked) mult=mult.times(tmp.a.getatomboost)
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
         exp=new Decimal(1)
         if(player.e.ischarge4) exp=exp.times(tmp.e.chargeeff[4])
+        if(hasChallenge("n",22)) exp=exp.times(1.05)
+        if(player.a.unlocked) exp=exp.times(buyableEffect("a",21))
         return new Decimal(1)
     },
     row: 2, // Row the layer is in on the tree (0 is the first row)
@@ -1153,6 +1175,32 @@ addLayer("p", {
             effectDisplay(){return `Currently:x${format(upgradeEffect("p",43))}`},
             tooltip(){return `1.25^v`}
         },
+        44:{
+            title:"Mixed proton",
+            description(){return `Boost proton gain based on ME.`},
+            cost(){return new Decimal(1e62)},
+            unlocked(){
+                return hasUpgrade("p",43)&&hasChallenge("n",22)
+            },
+            canAfford(){return player.p.points.gte(1e62)},
+            pay(){return player.p.points=player.p.points.minus(1e62)},
+            effect(){return Decimal.pow(5,player.n.mixpoints.pow(0.4))},
+            effectDisplay(){return `Currently:x${format(upgradeEffect("p",44))}`},
+            tooltip(){return `5^(me^0.4)`}
+        },
+        45:{
+            title:"Rotation synergism I",
+            description(){return `boost y based on x buyables.`},
+            cost(){return new Decimal(1e64)},
+            unlocked(){
+                return hasUpgrade("p",44)&&hasChallenge("n",22)
+            },
+            canAfford(){return player.p.points.gte(1e64)},
+            pay(){return player.p.points=player.p.points.minus(1e64)},
+            effect(){return getBuyableAmount("n",11).div(50)},
+            effectDisplay(){return `Currently:+${format(upgradeEffect("p",45))}`},
+            tooltip(){return `x/50`}
+        },
     },
     milestones:{
         0: {
@@ -1225,12 +1273,15 @@ addLayer("e", {
     gainMult() { // Calculate the multiplier for main currency from bonuses
         mult = new Decimal(1)
         if(hasUpgrade("p",32)) mult=mult.div(upgradeEffect("p",32))
+        if(hasUpgrade("n",42)) mult=mult.div(upgradeEffect("n",42))
         if(hasUpgrade("n",31)) mult=mult.div(1e25)
         if(player.e.ischarge5) mult=mult.div(tmp.e.chargeeff[5])
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
-        return new Decimal(1)
+        exp = new Decimal(1)
+        if(player.a.unlocked) exp=exp.div(buyableEffect("a",22))
+        return exp
     },
     row: 2, // Row the layer is in on the tree (0 is the first row)
     hotkeys: [
@@ -1307,6 +1358,7 @@ addLayer("e", {
     getmaxcharge(){
         let maxc=1
         if(hasUpgrade("n",13)) maxc=2
+        if(hasUpgrade("n",43)) maxc=3
         return maxc
     },
     getchargestyle(){
@@ -1434,6 +1486,14 @@ addLayer("n", {
     startData() { return {
         unlocked: true,
 		points: new Decimal(0),
+        mixpoints: new Decimal(0),
+        mixcolor: "",
+        mixcolorR: 0,
+        mixcolorG: 60,
+        mixcolorB: 235,
+        state1: true,
+        state2: false,
+        state3: false,
     }},
     color:"rgb(225,0,0)",
     requires: new Decimal(1e120), // Can be a function that takes requirement increases into account
@@ -1447,15 +1507,18 @@ addLayer("n", {
         if(hasUpgrade("n",11)) mult=mult.times(2)
         if(hasUpgrade("n",22)) mult=mult.times(upgradeEffect("n",22))
         if(hasUpgrade("n",32)) mult=mult.times(75)
+        if(hasUpgrade("n",41)) mult=mult.times(upgradeEffect("n",41))
         if(player.e.ischarge6) mult=mult.times(tmp.e.chargeeff[6])
+        if(player.a.unlocked) mult=mult.times(tmp.a.getatomboost)
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
         exp=new Decimal(1)
+        if(player.a.unlocked) exp=exp.times(buyableEffect("a",23))
         return new Decimal(1)
     },
     row: 2, // Row the layer is in on the tree (0 is the first row)
-    layerShown(){return hasUpgrade("p",35)},
+    layerShown(){return hasUpgrade("p",35)||player.a.unlocked},
     branches:["q"],
     tabFormat:{
         "Main":{
@@ -1473,15 +1536,74 @@ addLayer("n", {
             ],
             unlocked(){return hasUpgrade("n",15)},
         },
+        "Mix energy":{
+            content:[
+                ["display-text",function() { return `You have <h2 style="color:${player.n.mixcolor};text-shadow:0 0 10px ${player.n.mixcolor}">${format(player.n.mixpoints)}</h2> mixed energy.`},{ "font-size":"15px"},],
+                "blank",
+                ["display-text",function() { return `ME gain formula: <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" style="font-size:25px"><mo stretchy="false">(</mo><mo stretchy="false">(</mo><mi>l</mi><mi>o</mi><mi>g</mi><mn>10</mn><mo stretchy="false">(</mo><mrow><mfrac><mrow><mi>p</mi><mo>+</mo><mn>1</mn></mrow><mrow><mn>1</mn><mi>e</mi><mn>60</mn></mrow></mfrac></mrow><mo stretchy="false">)</mo><msup><mo stretchy="false">)</mo><mi style="color:rgb(0,60,235)">x</mi></msup><mo>+</mo><mo stretchy="false">(</mo><mi>l</mi><mi>o</mi><mi>g</mi><mn>10</mn><mo stretchy="false">(</mo><mrow><mfrac><mrow><mi>n</mi><mi>e</mi><mo>+</mo><mn>1</mn></mrow><mrow><mn>1</mn><mi>e</mi><mn>10</mn></mrow></mfrac></mrow><mo stretchy="false">)</mo><msup><mo stretchy="false">)</mo><mi style="color:rgb(225,0,0)">y</mi></msup><msup><mo stretchy="false">)</mo><mrow><mi>l</mi><mi>o</mi><mi>g</mi><mn>10</mn><mo stretchy="false">(</mo><mi>e</mi><mo>-</mo><mn>4</mn><msup><mo stretchy="false">)</mo><mi style="color:rgb(235,225,0)">z</mi></msup></mrow></msup><mo>-</mo><mn>2</mn></math>`}],
+                "blank",
+                ["display-text",function() { return `<b style="color:rgb(0,60,235);font-family:MS serif">x</b>=<b style="text-shadow:0 0 10px rgb(255,255,255);font-family:MS serif"">${format(tmp.n.getmixenergy[1])}</b>  <b style="color:rgb(225,0,0);font-family:MS serif"">y</b>=<b style="text-shadow:0 0 10px rgb(255,255,255);font-family:MS serif"">${format(tmp.n.getmixenergy[2])}</b>  <b style="color:rgb(235,225,0);font-family:MS serif"">z</b>=<b style="text-shadow:0 0 10px rgb(255,255,255);font-family:MS serif"">${format(tmp.n.getmixenergy[3])}</b>`},{ "font-size":"25px" }],
+                "blank",
+                "buyables",
+            ],
+            unlocked(){return hasChallenge("n",22)},
+        },
     },
     update(diff){
         player.n.points=player.n.points.add(tmp.n.getnegen.times(diff))
+        player.n.mixcolor="rgb("+Math.floor(player.n.mixcolorR)+","+Math.floor(player.n.mixcolorG)+","+Math.floor(player.n.mixcolorB)+")"
+        player.n.mixpoints=tmp.n.getmixenergy[0]
     },
     getnegen(){
         let gen=new Decimal(0)
         gen=player.q.points.add(1).log10().sub(120).max(0).pow(2).div(10000)
         gen=gen.times(tmp.n.gainMult).pow(tmp.n.gainExp)
         return  player.q.points.gte(1e120)&&hasUpgrade("p",35) ? gen : new Decimal(0)
+    },
+    getmixenergy(){
+        let p=new Decimal(1)
+        p=p.add(buyableEffect("n",11))
+        if(hasUpgrade("n",44)) p=p.add(upgradeEffect("n",44))
+        let e=new Decimal(1)
+        e=e.add(buyableEffect("n",13))
+        let n=new Decimal(1)
+        n=n.add(buyableEffect("n",12))
+        if(hasUpgrade("p",45)) n=n.add(upgradeEffect("p",45))
+        let me=new Decimal(1)
+        me=(player.p.points.add(1).div(1e60).log10().max(1).pow(p).add(player.n.points.add(1).div(1e10).log10().max(1).pow(n))).pow(player.e.points.minus(4).max(10).log10()).minus(2).max(0)
+        let lst=[me,p,n,e]
+        return lst
+    },
+    getmixcolor(){
+        if(player.n.mixcolorR<235&&player.n.mixcolorG>=60&&player.n.mixcolorG<225&&player.n.mixcolorB>0&&player.n.state1){
+            player.n.mixcolorR+=11.75
+            player.n.mixcolorG+=8.25
+            player.n.mixcolorB-=11.75
+            if(player.n.mixcolorR>=235){
+                player.n.state1=false
+                setTimeout(() => player.n.state2=true,250)
+                player.n.state2=true
+            }
+        }
+        if(player.n.mixcolorR>225&&player.n.mixcolorR<=235&&player.n.mixcolorG>0&&player.n.mixcolorB==0&&player.n.state2){
+            player.n.mixcolorR-=0.5
+            player.n.mixcolorG-=11.25
+            if(player.n.mixcolorG<=0){
+                player.n.state2=false
+                setTimeout(() => player.n.state3=true,250)
+                player.n.state3=true
+            }
+        }
+        if(player.n.mixcolorR>0&&player.n.mixcolorG<60&&player.n.mixcolorB<235&&player.n.state3){
+            player.n.mixcolorR-=11.25
+            player.n.mixcolorG+=3
+            player.n.mixcolorB+=11.75
+            if(player.n.mixcolorB>=235){
+                player.n.state3=false
+                setTimeout(() => player.n.state1=true,250)
+                player.n.state1=true
+            }
+        }
     },
     upgrades:{
         11:{
@@ -1583,7 +1705,7 @@ addLayer("n", {
         },
         24:{
             title:"Neutron boost IV",
-            description(){return `Boost electron charge effect based on neutron.`},
+            description(){return `Boost electron charge effect based on NE.`},
             currencyDisplayName:"NE",
             cost(){return new Decimal(3e6)},
             unlocked(){
@@ -1593,7 +1715,7 @@ addLayer("n", {
             pay(){return player.n.points=player.n.points.minus(3e6)},
             effect(){return player.n.points.add(1).log10().div(200).add(1)},
             effectDisplay(){return `Currently:^${format(upgradeEffect("n",24))}`},
-            tooltip(){return `log10(ne+1)/100+1`}
+            tooltip(){return `log10(ne+1)/200+1`}
         },
         25:{
             title:"Challenges!",
@@ -1639,6 +1761,92 @@ addLayer("n", {
             canAfford(){return player.n.points.gte(1e9)},
             pay(){return player.n.points=player.n.points.minus(1e9)},
         },
+        34:{
+            title:"Static boost IV",
+            description(){return `Add 0.01 to quark gain exp.`},
+            currencyDisplayName:"NE",
+            cost(){return new Decimal(1e9)},
+            unlocked(){
+                return hasUpgrade("n",33)
+            },
+            canAfford(){return player.n.points.gte(1e9)},
+            pay(){return player.n.points=player.n.points.minus(1e9)},
+        },
+        35:{
+            title:"Challenges.",
+            description(){return `Unlock the last challenge.`},
+            currencyDisplayName:"NE",
+            cost(){return new Decimal(2.5e9)},
+            unlocked(){
+                return hasUpgrade("n",34)
+            },
+            canAfford(){return player.n.points.gte(2.5e9)},
+            pay(){return player.n.points=player.n.points.minus(2.5e9)},
+        },
+        41:{
+            title:"Mixed neutron",
+            description(){return `Boost NE gain based on ME.`},
+            currencyDisplayName:"NE",
+            cost(){return new Decimal(1e9)},
+            unlocked(){
+                return hasChallenge("n",22)
+            },
+            canAfford(){return player.n.points.gte(1e9)},
+            pay(){return player.n.points=player.n.points.minus(1e9)},
+            effect(){return player.n.mixpoints.pow(3).add(1)},
+            effectDisplay(){return `Currently:x${format(upgradeEffect("n",41))}`},
+            tooltip(){return `me^3+1`}
+        },
+        42:{
+            title:"Mixed electron",
+            description(){return `Divide electron price based on ME.`},
+            currencyDisplayName:"NE",
+            cost(){return new Decimal(1e10)},
+            unlocked(){
+                return hasUpgrade("n",41)
+            },
+            canAfford(){return player.n.points.gte(1e10)},
+            pay(){return player.n.points=player.n.points.minus(1e10)},
+            effect(){return Decimal.pow(1.1,player.n.mixpoints).times(1e10)},
+            effectDisplay(){return `Currently:/${format(upgradeEffect("n",42))}`},
+            tooltip(){return `1.1^m*1e10`}
+        },
+        43:{
+            title:"Chaotic charge",
+            description(){return `You can charge 3 things at once.`},
+            currencyDisplayName:"NE",
+            cost(){return new Decimal(1e11)},
+            unlocked(){
+                return hasUpgrade("n",42)
+            },
+            canAfford(){return player.n.points.gte(1e11)},
+            pay(){return player.n.points=player.n.points.minus(1e11)},
+        },
+        44:{
+            title:"Rotation synergism II",
+            description(){return `Boost x based on y buyables.`},
+            currencyDisplayName:"NE",
+            cost(){return new Decimal(5e11)},
+            unlocked(){
+                return hasUpgrade("n",43)
+            },
+            canAfford(){return player.n.points.gte(5e11)},
+            pay(){return player.n.points=player.n.points.minus(5e11)},
+            effect(){return getBuyableAmount("n",12).div(50)},
+            effectDisplay(){return `Currently:+${format(upgradeEffect("n",44))}`},
+            tooltip(){return `y/50`}
+        },
+        45:{
+            title:"Atom",
+            description(){return `Unlock a new layer.`},
+            currencyDisplayName:"NE",
+            cost(){return new Decimal(1e13)},
+            unlocked(){
+                return hasUpgrade("n",43)
+            },
+            canAfford(){return player.n.points.gte(1e13)},
+            pay(){return player.n.points=player.n.points.minus(1e13)},
+        },
     },
     challenges:{
             11:{
@@ -1671,7 +1879,280 @@ addLayer("n", {
                 canComplete(){return player.points.gte(1e62)},
                 marked(){return hasChallenge("n",21)},
             },
-        }
+            22:{
+                name() {return`Purchaseless`},
+                challengeDescription() {return `You can only buy 20 genesis buyable in total, genesis buyable automation is disabled.`},
+                unlocked(){return hasUpgrade("n",35)},
+                goalDescription(){return  `1e125 Force`},
+                style:{"border-radius":"5%","border-color":"red","font-size":"17px","width":"250px","height":"250px"},
+                rewardDescription:"Unlock mix energy, ^1.05 proton gain.",
+                onEnter(){
+                    player.g.purchaseleft=20
+                },
+                onExit(){
+                    player.g.purchaseleft=20
+                },
+                canComplete(){return player.points.gte(1e125)},
+                marked(){return hasChallenge("n",22)},
+            },
+    },
+    buyables:{
+        11:{
+            cost(x) { return Decimal.pow(1000,x.pow(1.25)).times(1e40) },
+            effect(x) {return x.times(0.05)},
+            display() { return `<b style="font-size:17.5px">+0.05 to x</b>
+                                Cost: ${format(this.cost())} proton
+                                Amount: ${format(getBuyableAmount("n",11))}
+                                Effect: +${format(this.effect())}` },
+            canAfford() { return player.p.points.gt(this.cost())&&this.unlocked()},
+            buy(){
+                if(!tmp.n.buyables[11].canAfford) return
+                player.p.points=player.p.points.sub(this.cost())
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+            },
+            buyMax() {
+                if(!tmp.n.buyables[11].canAfford) return
+                let tb = player.p.points.max(1).div(1e40).log(1000).root(1.25).sub(1)
+                let tg = tb.plus(1).floor()
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).max(tg))
+            },
+            unlocked(){return hasChallenge("n",22)},
+            style:{"height":"150px","width":"150px","font-size":"15px","border-radius":"5%","margin-top":"15px","font-size":"12.5px"}
+        },
+        12:{
+            cost(x) { return Decimal.pow(10,x.pow(1.5)).times(1e8) },
+            effect(x) {return x.times(0.05)},
+            display() { return `<b style="font-size:17.5px">+0.05 to y</b>
+                                Cost: ${format(this.cost())} NE
+                                Amount: ${format(getBuyableAmount("n",12))}
+                                Effect: +${format(this.effect())}` },
+            canAfford() { return player.n.points.gt(this.cost())&&this.unlocked()},
+            buy(){
+                if(!tmp.n.buyables[12].canAfford) return
+                player.n.points=player.n.points.sub(this.cost())
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+            },
+            buyMax() {
+                if(!tmp.n.buyables[12].canAfford) return
+                let tb = player.n.points.max(1).div(1e8).log(10).root(1.5).sub(1)
+                let tg = tb.plus(1).floor()
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).max(tg))
+            },
+            unlocked(){return hasChallenge("n",22)},
+            style:{"height":"150px","width":"150px","font-size":"15px","border-radius":"5%","margin-top":"15px","font-size":"12.5px"}
+        },
+        13:{
+            cost(x) { return x.add(1).times(2) },
+            effect(x) {return x.times(0.05)},
+            display() { return `<b style="font-size:17.5px">+0.05 to z</b>
+                                Cost: ${format(this.cost())} electron
+                                Amount: ${format(getBuyableAmount("n",13))}
+                                Effect: +${format(this.effect())}` },
+            canAfford() { return player.e.points.gte(this.cost())&&this.unlocked()},
+            buy(){
+                if(!tmp.n.buyables[13].canAfford) return
+                player.e.points=player.e.points.sub(this.cost())
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+            },
+            buyMax() {
+                if(!tmp.n.buyables[13].canAfford) return
+                let tb = player.e.points.max(1).div(2).sub(1)
+                let tg = tb.plus(1).floor()
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).max(tg))
+            },
+            unlocked(){return hasChallenge("n",22)},
+            style:{"height":"150px","width":"150px","font-size":"15px","border-radius":"5%","margin-top":"15px","font-size":"12.5px"}
+        },
+    },
+}),
+addLayer("a", {
+    name: "atom", // This is optional, only used in a few places, If absent it just uses the layer id.
+    symbol: "A", // This appears on the layer's node. Default is the id with the first letter capitalized
+    position: 0, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
+    startData() { return {
+        unlocked: true,
+		points: new Decimal(0),
+    }},
+    color:"rgb(20, 110, 175)",
+    requires: new Decimal(15), // Can be a function that takes requirement increases into account
+    resource: "atom", // Name of prestige currency
+    baseResource: "mixed energy", // Name of resource prestige is based on
+    baseAmount() {return player.n.mixpoints}, // Get the current amount of baseResource
+    type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
+    exponent: 0.5, // Prestige currency exponent
+    gainMult() { // Calculate the multiplier for main currency from bonuses
+        mult = new Decimal(1)
+        return mult
+    },
+    gainExp() { // Calculate the exponent on main currency from bonuses
+        exp=new Decimal(1)
+        return new Decimal(1)
+    },
+    row: 3, // Row the layer is in on the tree (0 is the first row)
+    layerShown(){return hasUpgrade("n",45)||player.a.unlocked},
+    branches:["p","e","n"],
+    tabFormat:{
+        "Main":{
+            content:[
+                ["display-text",function() { return `You have <h2 style="color:rgb(20,110,175);text-shadow:0 0 10px rgb(20,110,175)">${format(player.a.points)}</h2> atom, boost proton and NE gain by <h2 style="color:rgb(20,110,175);text-shadow:0 0 10px rgb(20,110,175)">x${format(tmp.a.getatomboost)}</h2>`},{ "font-size":"15px"},],
+                "blank",
+                "prestige-button",
+                "blank",
+                "buyables",
+            ]
+        },
+        "Milestones":{
+            content:[
+                ["display-text",function() { return `You have <h2 style="color:rgb(20,110,175);text-shadow:0 0 10px rgb(20,110,175)">${format(player.a.points)}</h2> atom, boost proton and NE gain by <h2 style="color:rgb(20,110,175);text-shadow:0 0 10px rgb(20,110,175)">x${format(tmp.a.getatomboost)}</h2>`},{ "font-size":"15px"},],
+                "blank",
+                "prestige-button",
+                "blank",
+                "milestones"
+            ],
+        },
+    },
+    getatomboost(){
+        let boost=new Decimal(1)
+        boost=Decimal.pow(5,player.a.points.add(1).log10())
+        return boost
+    },
+    update(diff){
+    },
+    buyables:{
+        11:{
+            cost(x) {
+                lst=[1,1,1,2,2,2]
+                return lst[x]
+            },
+            effect(x) {return x.times(0.05).add(1)},
+            title() {return `Force boost`},
+            display() { return `+^0.05 to force gain after 1 
+                                Cost: ${format(this.cost())} atom
+                                Amount: ${format(getBuyableAmount("a",11))}/5
+                                Effect: ^${format(this.effect())}` },
+            canAfford() { return player.a.points.gte(this.cost())&&this.unlocked()},
+            purchaseLimit:5,
+            buy(){
+                if(!tmp.a.buyables[11].canAfford&&getBuyableAmount("a",11).gte(5)) return
+                player.a.points=player.a.points.sub(this.cost())
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+            },
+            unlocked(){return player.a.unlocked},
+            style:{"height":"150px","width":"150px","font-size":"15px","border-radius":"5%","margin-top":"15px","font-size":"12.5px"}
+        },
+        12:{
+            cost(x) {
+                lst=[1,2,2,2,3,3]
+                return lst[x]
+            },
+            effect(x) {return x.times(0.05).add(1)},
+            title() {return `Genesis boost`},
+            display() { return `+^0.05 to genesis gain 
+                                Cost: ${format(this.cost())} atom
+                                Amount: ${format(getBuyableAmount("a",12))}/5
+                                Effect: ^${format(this.effect())}` },
+            canAfford() { return player.a.points.gte(this.cost())&&this.unlocked()},
+            purchaseLimit:5,
+            buy(){
+                if(!tmp.a.buyables[12].canAfford&&getBuyableAmount("a",12).gte(5)) return
+                player.a.points=player.a.points.sub(this.cost())
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+            },
+            unlocked(){return player.a.unlocked},
+            style:{"height":"150px","width":"150px","font-size":"15px","border-radius":"5%","margin-top":"15px","font-size":"12.5px"}
+        },
+        13:{
+            cost(x) {
+                lst=[1,2,2,3,4,4]
+                return lst[x]
+            },
+            effect(x) {return x.times(0.03).add(1)},
+            title() {return `Quark boost`},
+            display() { return `+^0.03 to quark gain 
+                                Cost: ${format(this.cost())} atom
+                                Amount: ${format(getBuyableAmount("a",13))}/5
+                                Effect: ^${format(this.effect())}` },
+            canAfford() { return player.a.points.gte(this.cost())&&this.unlocked()},
+            purchaseLimit:5,
+            buy(){
+                if(!tmp.a.buyables[13].canAfford&&getBuyableAmount("a",13).gte(5)) return
+                player.a.points=player.a.points.sub(this.cost())
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+            },
+            unlocked(){return player.a.unlocked},
+            style:{"height":"150px","width":"150px","font-size":"15px","border-radius":"5%","margin-top":"15px","font-size":"12.5px"}
+        },
+        21:{
+            cost(x) {
+                lst=[1,2,3,4,4,5]
+                return lst[x]
+            },
+            effect(x) {return x.times(0.02).add(1)},
+            title() {return `Proton boost`},
+            display() { return `+^0.02 to proton gain 
+                                Cost: ${format(this.cost())} atom
+                                Amount: ${format(getBuyableAmount("a",21))}/5
+                                Effect: ^${format(this.effect())}` },
+            canAfford() { return player.a.points.gte(this.cost())&&this.unlocked()},
+            purchaseLimit:5,
+            buy(){
+                if(!tmp.a.buyables[21].canAfford&&getBuyableAmount("a",21).gte(5)) return
+                player.a.points=player.a.points.sub(this.cost())
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+            },
+            unlocked(){return player.a.unlocked},
+            style:{"height":"150px","width":"150px","font-size":"15px","border-radius":"5%","margin-top":"15px","font-size":"12.5px"}
+        },
+        22:{
+            cost(x) {
+                lst=[1,2,3,4,5,5]
+                return lst[x]
+            },
+            effect(x) {return x.times(0.02).add(1)},
+            title() {return `Electron boost`},
+            display() { return `+^0.02 to electron price root
+                                Cost: ${format(this.cost())} atom
+                                Amount: ${format(getBuyableAmount("a",22))}/5
+                                Effect: ^${format(new Decimal(1).div(this.effect()))}` },
+            canAfford() { return player.a.points.gte(this.cost())&&this.unlocked()},
+            purchaseLimit:5,
+            buy(){
+                if(!tmp.a.buyables[22].canAfford&&getBuyableAmount("a",22).gte(5)) return
+                player.a.points=player.a.points.sub(this.cost())
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+            },
+            unlocked(){return player.a.unlocked},
+            style:{"height":"150px","width":"150px","font-size":"15px","border-radius":"5%","margin-top":"15px","font-size":"12.5px"}
+        },
+        23:{
+            cost(x) {
+                lst=[1,2,3,4,5,6]
+                return lst[x]
+            },
+            effect(x) {return x.times(0.02).add(1)},
+            title() {return `Neutron boost`},
+            display() { return `+^0.02 to NE gain
+                                Cost: ${format(this.cost())} atom
+                                Amount: ${format(getBuyableAmount("a",23))}/5
+                                Effect: ^${format(new Decimal(1).div(this.effect()))}` },
+            canAfford() { return player.a.points.gte(this.cost())&&this.unlocked()},
+            purchaseLimit:5,
+            buy(){
+                if(!tmp.a.buyables[23].canAfford&&getBuyableAmount("a",23).gte(5)) return
+                player.a.points=player.a.points.sub(this.cost())
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+            },
+            unlocked(){return player.a.unlocked},
+            style:{"height":"150px","width":"150px","font-size":"15px","border-radius":"5%","margin-top":"15px","font-size":"12.5px"}
+        },
+    },
+    milestones:{
+        0: {
+            requirementDescription: "1 atom",
+            done() { return player.a.points.gte(1)},
+            effectDescription: `10x proton gain, +0.01 to force gain exp for first 50 atoms.`,
+        },
+    }
 }),
 addLayer("st", {
     symbol: "#",
@@ -1716,6 +2197,10 @@ addLayer("st", {
         "Chapter III":{
             content:[
                 ["infobox","Proton"],
+                "blank",
+                ["infobox","Electron"],
+                "blank",
+                ["infobox","Neutron"],
                 "blank",
             ],
             unlocked(){return player.p.unlocked},
@@ -1812,6 +2297,25 @@ addLayer("st", {
                             What will be the boost of proton?` },
             style:{"width":"400px"},
             unlocked(){return player.p.unlocked}
+        },
+        Electron: {
+            title: "Part II-Electron",
+            body() { return `Protons now have enough force to catch something new.<br>
+                            It is called electron.<br>
+                            Electrons goes around proton and it has a large number of energy.<br>
+                            Charge it can give a boost.` },
+            style:{"width":"400px"},
+            unlocked(){return player.e.unlocked}
+        },
+        Neutron: {
+            title: "Part III-Neutron",
+            body() { return `Things are much more complex now.<br>
+                            A neutron appeared.<br>
+                            By crunching quarks, you will passively get NE.<br>
+                            You can unlock challenges with NE.<br>
+                            Which is harder to produce force.` },
+            style:{"width":"400px"},
+            unlocked(){return player.n.unlocked}
         },
     },
 })

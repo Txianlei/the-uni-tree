@@ -44,6 +44,7 @@ function getPointGen() {
     let base=new Decimal(3)
     if(hasUpgrade("g",23)) base=base.add(upgradeEffect("g",23))
     if(hasChallenge("n",11)) base=base.add(0.1)
+    if(hasMilestone("a",0)) base=base.add(player.a.points.min(50).times(0.01))
 
     gain=gain.times(Decimal.pow(base,player.g.points.add(1).log10()))
     if(hasUpgrade("g",11)) gain=gain.times(2)
@@ -55,6 +56,8 @@ function getPointGen() {
     gain=gain.times(buyableEffect("g",21))
     if(player.q.unlocked) gain=gain.times(tmp.q.calcqboost)
     if(hasMilestone("p",0)) gain=gain.times(10)
+
+    if(gain.gte(1)) gain=gain.pow(buyableEffect("a",11))
     
     let softcap=new Decimal(1)
     let softpower=new Decimal(0.5)
@@ -89,6 +92,7 @@ function getForceSoftcap() {
     let base=new Decimal(3)
     if(hasUpgrade("g",23)) base=base.add(upgradeEffect("g",23))
     if(hasChallenge("n",11)) base=base.add(0.1)
+    if(hasMilestone("a",0)) base=base.add(player.a.points.min(50).times(0.01))
     gain=gain.times(Decimal.pow(base,player.g.points.add(1).log10()))
     if(hasUpgrade("g",11)) gain=gain.times(2)
     if(hasUpgrade("g",12)) gain=gain.times(upgradeEffect("g",12))
@@ -99,6 +103,8 @@ function getForceSoftcap() {
     gain=gain.times(buyableEffect("g",21))
     if(player.q.unlocked) gain=gain.times(tmp.q.calcqboost)
     if(hasMilestone("p",0)) gain=gain.times(10)
+
+    if(gain.gte(1)) gain=gain.pow(buyableEffect("a",11))
     
     let softcap=new Decimal(1)
     let softpower=new Decimal(0.5)
@@ -122,7 +128,7 @@ var displayThings = [
 
 // Determines when the game "ends"
 function isEndgame() {
-    return player.e.points.gte(3)
+    return player.a.unlocked
 }
 
 // Background styles
