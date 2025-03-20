@@ -48,7 +48,7 @@ addLayer("g", {
     ],
     doReset(resettingLayer){
         let keep=[]
-        if(hasUpgrade("q",22)) keep.push("upgrades")
+        if(hasUpgrade("q",22)||hasMilestone("a",0)) keep.push("upgrades")
         if (layers[resettingLayer].row > this.row) {
             if(!hasUpgrade("q",22)) player.subtabs.g.mainTabs="Main"
             layerDataReset("g", keep)
@@ -58,7 +58,7 @@ addLayer("g", {
         if(player.points.eq(0)&&player.g.points.eq(0)) player.g.points=new Decimal(1)
     },
     layerShown(){return true},
-    passiveGeneration(){return hasUpgrade("q",31)?upgradeEffect("q",31):0},
+    passiveGeneration(){return (hasUpgrade("q",31)||hasMilestone("a",0))?(max(upgradeEffect("q",31),hasMilestone("a",0)?0.05:0)):0},
     tabFormat:{
         "Main":{
             content:[
@@ -87,12 +87,12 @@ addLayer("g", {
         }
     },
     update(diff){
-        if((hasUpgrade("q",23)||hasMilestone("p",0))) layers.g.buyables[11].buy()
-        if((hasUpgrade("q",33)||hasMilestone("p",0))&&(!inChallenge("n",22))) layers.g.buyables[21].buy()
-        if((hasUpgrade("q",33)||hasMilestone("p",0))&&(!inChallenge("n",22))) layers.g.buyables[22].buy()
-        if((hasUpgrade("q",33)||hasMilestone("p",0))&&(!inChallenge("n",22))) layers.g.buyables[23].buy()
-        if((hasUpgrade("q",33)||hasMilestone("p",0))&&(!inChallenge("n",22))) layers.g.buyables[31].buy()
-        if((hasUpgrade("q",33)||hasMilestone("p",0))&&(!inChallenge("n",22))) layers.g.buyables[32].buy()
+        if((hasUpgrade("q",23)||hasMilestone("p",0)||hasMilestone("a",0))) layers.g.buyables[11].buy()
+        if((hasUpgrade("q",33)||hasMilestone("p",0)||hasMilestone("a",0))&&(!inChallenge("n",22))) layers.g.buyables[21].buy()
+        if((hasUpgrade("q",33)||hasMilestone("p",0)||hasMilestone("a",0))&&(!inChallenge("n",22))) layers.g.buyables[22].buy()
+        if((hasUpgrade("q",33)||hasMilestone("p",0)||hasMilestone("a",0))&&(!inChallenge("n",22))) layers.g.buyables[23].buy()
+        if((hasUpgrade("q",33)||hasMilestone("p",0)||hasMilestone("a",0))&&(!inChallenge("n",22))) layers.g.buyables[31].buy()
+        if((hasUpgrade("q",33)||hasMilestone("p",0)||hasMilestone("a",0))&&(!inChallenge("n",22))) layers.g.buyables[32].buy()
     },
     upgrades:{
         11:{
@@ -282,15 +282,15 @@ addLayer("g", {
                 if(hasUpgrade("n",33)) base=base.add(1)
                 return Decimal.pow(base,x.add(buyableEffect("g",22)))
             },
-            display() { return (hasUpgrade("q",23)?``:`Reset genesis,force, `+(hasUpgrade("q",14)?``:`and first 9 genesis upgrades`))+`boost genesis and force gain.
+            display() { return ((hasUpgrade("q",23)||hasMilestone("a",0))?``:`Reset genesis,force, `+((hasUpgrade("q",14)||hasMilestone("a",0))?``:`and first 9 genesis upgrades`))+`boost genesis and force gain.
                                 Next at: ${format(this.cost())} genesis
                                 Amount: ${format(getBuyableAmount("g",11))}
                                 Effect: x${format(this.effect())}` },
             canAfford() { return player.g.points.gte(this.cost())&&this.unlocked()&&player.points.gte("1e-39") },
             buy(){
                 if(!tmp.g.buyables[11].canAfford) return
-                if(!(hasUpgrade("q",14)||hasMilestone("p",0))) player.g.upgrades = player.g.upgrades.filter(item => item > "24")
-                if(!(hasUpgrade("q",23)||hasMilestone("p",0))){
+                if(!(hasUpgrade("q",14)||hasMilestone("a",0))) player.g.upgrades = player.g.upgrades.filter(item => item > "24")
+                if(!(hasUpgrade("q",23)||hasMilestone("p",0)||hasMilestone("a",0))){
                     player.g.points=new Decimal(0)
                     player.points=new Decimal("1e-39")
                 }
@@ -321,7 +321,7 @@ addLayer("g", {
             buy(){
                 if(inChallenge("n",22)) player.g.purchaseleft--; 
                 if(!tmp.g.buyables[21].canAfford) return
-                if(!(hasUpgrade("q",33)||hasMilestone("p",0))) player.points=player.points.sub(this.cost())
+                if(!(hasUpgrade("q",33)||hasMilestone("p",0)||hasMilestone("a",0))) player.points=player.points.sub(this.cost())
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
             },
             buyMax() {
@@ -349,7 +349,7 @@ addLayer("g", {
             buy(){
                 if(inChallenge("n",22)) player.g.purchaseleft--;
                 if(!tmp.g.buyables[22].canAfford) return
-                if(!(hasUpgrade("q",33)||hasMilestone("p",0))) player.points=player.points.sub(this.cost())
+                if(!(hasUpgrade("q",33)||hasMilestone("p",0)||hasMilestone("a",0))) player.points=player.points.sub(this.cost())
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
             },
             buyMax() {
@@ -378,7 +378,7 @@ addLayer("g", {
             buy(){
                 if(inChallenge("n",22)) player.g.purchaseleft--;
                 if(!tmp.g.buyables[23].canAfford) return
-                if(!(hasUpgrade("q",33)||hasMilestone("p",0))) player.points=player.points.sub(this.cost())
+                if(!(hasUpgrade("q",33)||hasMilestone("p",0)||hasMilestone("a",0))) player.points=player.points.sub(this.cost())
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
             },
             buyMax() {
@@ -403,7 +403,7 @@ addLayer("g", {
             buy(){
                 if(inChallenge("n",22)) player.g.purchaseleft--;
                 if(!tmp.g.buyables[31].canAfford) return
-                if(!(hasUpgrade("q",33)||hasMilestone("p",0))) player.points=player.points.sub(this.cost())
+                if(!(hasUpgrade("q",33)||hasMilestone("p",0)||hasMilestone("a",0))) player.points=player.points.sub(this.cost())
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1).min(100))
             },
             buyMax() {
@@ -427,7 +427,7 @@ addLayer("g", {
             buy(){
                 if(inChallenge("n",22)) player.g.purchaseleft--;
                 if(!tmp.g.buyables[32].canAfford) return
-                if(!(hasUpgrade("q",33)||hasMilestone("p",0))) player.points=player.points.sub(this.cost())
+                if(!(hasUpgrade("q",33)||hasMilestone("p",0)||hasMilestone("a",0))) player.points=player.points.sub(this.cost())
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
             },
             buyMax() {
@@ -2183,7 +2183,7 @@ addLayer("a", {
         0: {
             requirementDescription: "1 atom",
             done() { return player.a.points.gte(1)},
-            effectDescription: `10x proton gain. +0.01 to force gain exp for first 50 atoms.`,
+            effectDescription: `10x proton gain. +0.01 to force gain exp for first 50 atoms. Quark Qols are effective all the times.`,
         },
         1: {
             requirementDescription: "2 total atom",
