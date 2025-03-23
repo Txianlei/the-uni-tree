@@ -58,7 +58,7 @@ addLayer("g", {
         if(player.points.eq(0)&&player.g.points.eq(0)) player.g.points=new Decimal(1)
     },
     layerShown(){return true},
-    passiveGeneration(){return (hasUpgrade("q",31)||hasMilestone("a",0))?(max(upgradeEffect("q",31),hasMilestone("a",0)?0.05:0)):0},
+    passiveGeneration(){return (hasUpgrade("q",31)||hasMilestone("a",0))?(upgradeEffect("q",31).max(hasMilestone("a",0)?0.05:0)):0},
     tabFormat:{
         "Main":{
             content:[
@@ -339,6 +339,7 @@ addLayer("g", {
             effect(x) { 
                 base=new Decimal(0.5)
                 if(hasMilestone("p",1)) base=base.add(0.1)
+                if(hasUpgrade("a",12)) base=base.add(0.2)
                 return this.unlocked()? x.times(base):new Decimal(0)
             },
             display() { return `Give free "Gravitational field"s.
@@ -367,6 +368,7 @@ addLayer("g", {
             effect(x) {
                 let base=new Decimal(3)
                 if(hasUpgrade("q",12)) base=base.add(1.5)
+                if(hasUpgrade("a",11)) base=base.add(2)
                 if(inChallenge("n",11)) base=new Decimal(1)
                 return Decimal.pow(base,x)
             },
@@ -947,6 +949,7 @@ addLayer("p", {
     doReset(resettingLayer){
         let keep=[]
         if(hasMilestone("a",1)) keep.push("upgrades")
+        if(hasMilestone("a",5)) keep.push("milestones")
         if (layers[resettingLayer].row > this.row) {
             layerDataReset("p", keep)
         }
@@ -972,6 +975,7 @@ addLayer("p", {
             ],
         },
     },
+    passiveGeneration(){return hasMilestone("a",5)?1:0},
     update(diff){
     },
     upgrades:{
@@ -1194,8 +1198,8 @@ addLayer("p", {
             },
             canAfford(){return player.p.points.gte(1e62)},
             pay(){return player.p.points=player.p.points.minus(1e62)},
-            effect(){return Decimal.pow(5,player.n.mixpoints.pow(0.4))},
-            effectDisplay(){return `Currently:x${format(upgradeEffect("p",44))}`},
+            effect(){return Decimal.pow(5,player.n.mixpoints.pow(0.4)).min(1e50)},
+            effectDisplay(){return `Currently:`+(this.effect().gte(1e50)?`x1.00e50<br>(Capped)`:`x${format(upgradeEffect("p",44))}`)},
             tooltip(){return `5^(me^0.4)`}
         },
         45:{
@@ -1265,12 +1269,14 @@ addLayer("e", {
         ischarge4: false,
         ischarge5: false,
         ischarge6: false,
+        ischarge7: false,
         style1: 0,
         style2: 0,
         style3: 0,
         style4: 0,
         style5: 0,
         style6: 0,
+        style7: 0,
     }},
     color:"rgb(235, 225, 0)",
     requires: new Decimal(1e55), // Can be a function that takes requirement increases into account
@@ -1345,6 +1351,9 @@ addLayer("e", {
         if(player.e.unlocked&&player.e.ischarge6){
             eff6=Decimal.pow(5,player.e.points.pow(0.3)).max(1)
         }
+        if(player.e.unlocked&&player.e.ischarge7){
+            eff7=player.e.points.pow(2).div(99).add(1)
+        }
         return [null,eff1,eff2,eff3,eff4,eff5,eff6,eff7,eff8,eff9]
     },
     curcharge(){
@@ -1355,6 +1364,7 @@ addLayer("e", {
         if(player.e.ischarge4) cur++
         if(player.e.ischarge5) cur++
         if(player.e.ischarge6) cur++
+        if(player.e.ischarge7) cur++
         return cur
     },
     update(diff){
@@ -1365,6 +1375,7 @@ addLayer("e", {
         player.e.style4=(player.e.style4+2)%130
         player.e.style5=(player.e.style5+2)%130
         player.e.style6=(player.e.style6+2)%130
+        player.e.style7=(player.e.style7+2)%130
         player.e.maxcharge=tmp.e.getmaxcharge
     },
     getmaxcharge(){
@@ -1380,7 +1391,8 @@ addLayer("e", {
         d="radial-gradient(#000000 "+(Math.abs(65-player.e.style4))+"%,rgba(0,60,235,0.3) "+(Math.max(100-Math.abs(100-player.e.style4),35))+"%)"
         e="radial-gradient(#000000 "+(Math.abs(65-player.e.style5))+"%,rgba(235, 225, 0, 0.3) "+(Math.max(100-Math.abs(100-player.e.style5),35))+"%)"
         f="radial-gradient(#000000 "+(Math.abs(65-player.e.style6))+"%,rgba(225,0, 0, 0.3) "+(Math.max(100-Math.abs(100-player.e.style6),35))+"%)"
-        return [null,a,b,c,d,e,f]
+        g="radial-gradient(#000000 "+(Math.abs(65-player.e.style7))+("%,rgba("+Math.floor(player.n.mixcolorR)+","+Math.floor(player.n.mixcolorG)+","+Math.floor(player.n.mixcolorB)+",0.3)")+(Math.max(100-Math.abs(100-player.e.style7),35))+"%)"
+        return [null,a,b,c,d,e,f,g]
     },
     clickables:{
         11:{
@@ -1489,6 +1501,23 @@ addLayer("e", {
             },
             canClick(){return (player.e.currentcharge<player.e.maxcharge)||(player.e.ischarge6)}
         },
+        31:{
+            display(){return `Charge electron into mix energy<br>Boost ME gain by x${format(tmp.e.chargeeff[7])}.`},
+            style:{"height":"150px","width":"150px","border-radius":"5%","border-size":"6px","border-color"(){return player.n.mixcolor},"color"(){return player.n.mixcolor},"font-size":"15px","margin-top":"10px",
+                "background"(){
+                    if(player.e.ischarge7) return tmp.e.getchargestyle[7]
+                    if(player.e.currentcharge<player.e.maxcharge) return "rgba("+Math.floor(player.n.mixcolorR)+","+Math.floor(player.n.mixcolorG)+","+Math.floor(player.n.mixcolorB)+",0.3)"
+                    return "#00000000"
+                }
+            },
+            unlocked(){return hasMilestone("a",4)},
+            onClick(){
+                doReset("e",force=true)
+                player.e.ischarge7=!player.e.ischarge7
+                player.e.style7=0
+            },
+            canClick(){return (player.e.currentcharge<player.e.maxcharge)||(player.e.ischarge7)}
+        },
     }
 }),
 addLayer("n", {
@@ -1591,6 +1620,7 @@ addLayer("n", {
         if(hasUpgrade("p",45)) n=n.add(upgradeEffect("p",45))
         let me=new Decimal(1)
         me=(player.p.points.add(1).div(1e60).log10().max(1).pow(p).add(player.n.points.add(1).div(1e10).log10().max(1).pow(n))).pow(player.e.points.minus(4).max(10).log10()).minus(2).max(0)
+        if(player.e.ischarge7) me=me.times(tmp.e.chargeeff[7])
         let lst=[me,p,n,e]
         return lst
     },
@@ -1827,8 +1857,8 @@ addLayer("n", {
             },
             canAfford(){return player.n.points.gte(5e9)},
             pay(){return player.n.points=player.n.points.minus(5e9)},
-            effect(){return Decimal.pow(1.1,player.n.mixpoints).times(1e10)},
-            effectDisplay(){return `Currently:/${format(upgradeEffect("n",42))}`},
+            effect(){return Decimal.pow(1.1,player.n.mixpoints).times(1e10).min("1e308")},
+            effectDisplay(){return `Currently:`+(this.effect().gte("1e308")? `/1.00e308<br>(Capped)`:`/${format(upgradeEffect("n",42))}`)},
             tooltip(){return `1.1^m*1e10`}
         },
         43:{
@@ -2004,6 +2034,7 @@ addLayer("a", {
         unlocked: true,
 		points: new Decimal(0),
         total: new Decimal(0),
+        row1costmult: new Decimal(1),
     }},
     color:"rgb(20, 110, 175)",
     requires: new Decimal(15), // Can be a function that takes requirement increases into account
@@ -2024,6 +2055,9 @@ addLayer("a", {
     row: 3, // Row the layer is in on the tree (0 is the first row)
     layerShown(){return hasUpgrade("n",45)||player.a.unlocked},
     branches:["p","e","n"],
+    hotkeys: [
+        {key: "a", description: "A: Reset for atom", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+    ],
     tabFormat:{
         "Main":{
             content:[
@@ -2042,6 +2076,18 @@ addLayer("a", {
                 "blank",
                 "milestones"
             ],
+        },
+        "Elements":{
+            content:[
+                ["display-text",function() { return `You have <h2 style="color:rgb(20,110,175);text-shadow:0 0 10px rgb(20,110,175)">${format(player.a.points)}</h2> atom, boost proton and NE gain by <h2 style="color:rgb(20,110,175);text-shadow:0 0 10px rgb(20,110,175)">x${format(tmp.a.getatomboost)}</h2>`},{ "font-size":"15px"},],
+                "blank",
+                ["display-text",function() { return `When you choose one element, the others in this row will be more expensive`},{ "font-size":"15px"},],
+                "blank",
+                "clickables",
+                "blank",
+                "upgrades",
+            ],
+            unlocked(){return hasMilestone("a",6)},
         },
     },
     getatomboost(){
@@ -2199,6 +2245,87 @@ addLayer("a", {
             requirementDescription: "5 total atom",
             done() { return player.a.total.gte(5)},
             effectDescription: `You can buy max electron at once, unlock a new neutron challenge.`,
+        },
+        4: {
+            requirementDescription: "12 total atom",
+            done() { return player.a.total.gte(12)},
+            effectDescription: `Unlock a new charge.`,
+        },
+        5: {
+            requirementDescription: "1500 total atom",
+            done() { return player.a.total.gte(1500)},
+            effectDescription: `Auto gain 100% of proton,keep proton milestones.`,
+        },
+        6: {
+            requirementDescription: "10000 total atom",
+            done() { return player.a.total.gte(10000)},
+            effectDescription: `Keep Neutron upgrade, unlock elements.`,
+        },
+    },
+    clickables:{
+        11:{
+            display(){return `respec elements(won't give back atoms you've spent)`},
+            style:{"height":"75px","min-height":"75px","width":"400px","border-radius":"5%","border-size":"6px","border-color":"rgb(20,110,175)","color":"rgb(20,110,175)","font-size":"15px","background-color":"rgba(20,110,175,0.3)"},
+            unlocked(){return player.e.unlocked},
+            onClick(){
+                player.a.upgrades=[]
+                playera.row1costmult=new Decimal(1)
+            },
+            canClick(){return true}
+        },
+    },
+    upgrades:{
+        11:{
+            title:"H[1]",
+            description(){return `Add 2 to "Negative" base.`},
+            cost(){return new Decimal(10000).times(player.a.row1costmult)},
+            unlocked(){
+                return hasMilestone("a",6)
+            },
+            onPurchase(){
+                player.a.row1costmult=player.a.row1costmult.times(1.3)
+            },
+            canAfford(){return player.a.points.gte(player.a.row1costmult.times(10000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row1costmult.times(10000))},
+            style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 0, 0)","min-height":"100px","background-color"(){
+                        if(hasUpgrade("a",11)) return "rgb(200, 0, 0)"
+                        if(tmp.a.upgrades[11].canAfford) return "rgba(200, 0, 0, 0.3)"
+                        return "rgb(0, 0, 0)"
+                    },"box-shadow"(){
+                        if(hasUpgrade("a",11)) return "0px 0px 15px rgba(200, 0, 0, 0.75)"
+                        if(tmp.a.upgrades[11].canAfford) return "0px 0px 20px rgb(200, 0, 0)"
+                        return "0px 0px 2px rgb(200, 0, 0)"
+                    },"color"(){
+                        if(hasUpgrade("a",11)||tmp.a.upgrades[11].canAfford) return "rgb(0, 0, 0)"
+                        return "rgb(200, 0, 0)"
+                    }
+                },
+        },
+        12:{
+            title:"He[2]",
+            description(){return `Add 0.2 to "Vanish" base.`},
+            cost(){return new Decimal(12000).times(player.a.row1costmult)},
+            unlocked(){
+                return hasMilestone("a",6)
+            },
+            onPurchase(){
+                player.a.row1costmult=player.a.row1costmult.times(1.3)
+            },
+            canAfford(){return player.a.points.gte(player.a.row1costmult.times(12000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row1costmult.times(12000))},
+            style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 0, 200)","min-height":"100px","background-color"(){
+                        if(hasUpgrade("a",12)) return "rgb(200, 0, 200)"
+                        if(tmp.a.upgrades[12].canAfford) return "rgba(200, 0, 200, 0.3)"
+                        return "rgb(0, 0, 0)"
+                    },"box-shadow"(){
+                        if(hasUpgrade("a",12)) return "0px 0px 15px rgba(200, 0, 200, 0.75)"
+                        if(tmp.a.upgrades[12].canAfford) return "0px 0px 20px rgb(200, 0, 200)"
+                        return "0px 0px 2px rgb(200, 0, 200)"
+                    },"color"(){
+                        if(hasUpgrade("a",12)||tmp.a.upgrades[12].canAfford) return "rgb(0, 0, 0)"
+                        return "rgb(200, 0, 200)"
+                    }
+                },
         },
     }
 }),

@@ -128,7 +128,7 @@ var displayThings = [
 
 // Determines when the game "ends"
 function isEndgame() {
-    return player.a.unlocked
+    return hasUpgrade("a",11)&&hasUpgrade("a",12)
 }
 
 // Background styles
