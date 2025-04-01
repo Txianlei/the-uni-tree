@@ -1322,6 +1322,7 @@ addLayer("e", {
         },
     },
     canBuyMax(){return hasMilestone("a",3)},
+    resetsNothing(){return hasUpgrade("a",31)},
     chargeeff(){
         eff1=new Decimal(1)
         eff2=new Decimal(1)
@@ -1553,6 +1554,7 @@ addLayer("n", {
         if(hasMilestone("a",1)) mult=mult.times(100)
         if(player.e.ischarge6) mult=mult.times(tmp.e.chargeeff[6])
         if(player.a.unlocked) mult=mult.times(tmp.a.getatomboost)
+        if(hasUpgrade("a",26)) mult=mult.times(upgradeEffect("a",26))
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
@@ -1615,11 +1617,14 @@ addLayer("n", {
         let p=new Decimal(1)
         p=p.add(buyableEffect("n",11))
         if(hasUpgrade("n",44)) p=p.add(upgradeEffect("n",44))
+        if(hasUpgrade("a",25)) p=p.add(0.1)
         let e=new Decimal(1)
         e=e.add(buyableEffect("n",13))
+        if(hasUpgrade("a",25)) e=e.add(0.1)
         let n=new Decimal(1)
         n=n.add(buyableEffect("n",12))
         if(hasUpgrade("p",45)) n=n.add(upgradeEffect("p",45))
+        if(hasUpgrade("a",25)) n=n.add(0.1)
         let me=new Decimal(1)
         me=(player.p.points.add(1).div(1e60).log10().max(1).pow(p).add(player.n.points.add(1).div(1e10).log10().max(1).pow(n))).pow(player.e.points.minus(4).max(10).log10()).minus(2).max(0)
         if(player.e.ischarge7) me=me.times(tmp.e.chargeeff[7])
@@ -2035,6 +2040,7 @@ addLayer("a", {
         total: new Decimal(0),
         row1costmult: new Decimal(1),
         row2costmult: new Decimal(1),
+        row3costmult: new Decimal(1),
         boughtsum: new Decimal(0),
     }},
     color:"rgb(20, 110, 175)",
@@ -2048,6 +2054,7 @@ addLayer("a", {
         mult = new Decimal(1)
         if(hasChallenge("n",31)) mult=mult.times(2)
         if(hasUpgrade("a",21)) mult=mult.times(upgradeEffect("a",21))
+        if(hasUpgrade("a",24)) mult=mult.times(upgradeEffect("a",24))
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
@@ -2346,7 +2353,7 @@ addLayer("a", {
             },
             canAfford(){return player.a.points.gte(player.a.row2costmult.times(7500))},
             pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(7500))},
-            effect(){return player.a.points.log(2).pow(2).div(30)},
+            effect(){return player.a.points.add(1).log(2).pow(2).div(30)},
             effectDisplay(){return `Currently:x${format(upgradeEffect("a",21))}`},
             style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(220, 70, 2)","min-height":"100px","background-color"(){
                         if(hasUpgrade("a",21)) return "rgb(220, 70, 2)"
@@ -2418,6 +2425,91 @@ addLayer("a", {
                     }
                 },
         },
+        24:{
+            title:"C[6]",
+            description(){return `Boost atom gain based on force.`},
+            cost(){return new Decimal(25000).times(player.a.row2costmult)},
+            unlocked(){
+                return hasUpgrade("a",23)
+            },
+            onPurchase(){
+                player.a.boughtsum=player.a.boughtsum.add(this.cost)
+                player.a.row2costmult=player.a.row2costmult.times(1.2)
+            },
+            canAfford(){return player.a.points.gte(player.a.row2costmult.times(25000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(25000))},
+            effect(){return player.points.add(1).log10().pow(4).div(2e9).add(1)},
+            effectDisplay(){return `Currently:x${format(upgradeEffect("a",24))}`},
+            style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 0, 0)","min-height":"100px","background-color"(){
+                        if(hasUpgrade("a",24)) return "rgb(200, 0, 0)"
+                        if(tmp.a.upgrades[24].canAfford) return "rgba(200, 0, 0, 0.3)"
+                        return "rgb(0, 0, 0)"
+                    },"box-shadow"(){
+                        if(hasUpgrade("a",24)) return "0px 0px 15px rgba(200, 0, 0, 0.75)"
+                        if(tmp.a.upgrades[24].canAfford) return "0px 0px 20px rgb(200, 0, 0)"
+                        return "0px 0px 2px rgb(200, 0, 0)"
+                    },"color"(){
+                        if(hasUpgrade("a",24)||tmp.a.upgrades[24].canAfford) return "rgb(0, 0, 0)"
+                        return "rgb(200, 0, 0)"
+                    }
+                },
+        },
+        25:{
+            title:"N[7]",
+            description(){return `+0.1 to x,y and z.`},
+            cost(){return new Decimal(50000).times(player.a.row2costmult)},
+            unlocked(){
+                return hasUpgrade("a",26)
+            },
+            onPurchase(){
+                player.a.boughtsum=player.a.boughtsum.add(this.cost)
+                player.a.row2costmult=player.a.row2costmult.times(1.4)
+            },
+            canAfford(){return player.a.points.gte(player.a.row2costmult.times(50000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(50000))},
+            style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 0, 0)","min-height":"100px","background-color"(){
+                        if(hasUpgrade("a",25)) return "rgb(200, 0, 0)"
+                        if(tmp.a.upgrades[25].canAfford) return "rgba(200, 0, 0, 0.3)"
+                        return "rgb(0, 0, 0)"
+                    },"box-shadow"(){
+                        if(hasUpgrade("a",25)) return "0px 0px 15px rgba(200, 0, 0, 0.75)"
+                        if(tmp.a.upgrades[25].canAfford) return "0px 0px 20px rgb(200, 0, 0)"
+                        return "0px 0px 2px rgb(200, 0, 0)"
+                    },"color"(){
+                        if(hasUpgrade("a",25)||tmp.a.upgrades[25].canAfford) return "rgb(0, 0, 0)"
+                        return "rgb(200, 0, 0)"
+                    }
+                },
+        },
+        26:{
+            title:"O[8]",
+            description(){return `Boost NE gain based on atom.`},
+            cost(){return new Decimal(30000).times(player.a.row2costmult)},
+            unlocked(){
+                return hasUpgrade("a",27)
+            },
+            onPurchase(){
+                player.a.boughtsum=player.a.boughtsum.add(this.cost)
+                player.a.row2costmult=player.a.row2costmult.times(1.3)
+            },
+            canAfford(){return player.a.points.gte(player.a.row2costmult.times(30000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(30000))},
+            effect(){return Decimal.pow(2,player.a.points.add(1).log10())},
+            effectDisplay(){return `Currently:x${format(upgradeEffect("a",26))}`},
+            style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 0, 0)","min-height":"100px","background-color"(){
+                        if(hasUpgrade("a",26)) return "rgb(200, 0, 0)"
+                        if(tmp.a.upgrades[26].canAfford) return "rgba(200, 0, 0, 0.3)"
+                        return "rgb(0, 0, 0)"
+                    },"box-shadow"(){
+                        if(hasUpgrade("a",26)) return "0px 0px 15px rgba(200, 0, 0, 0.75)"
+                        if(tmp.a.upgrades[26].canAfford) return "0px 0px 20px rgb(200, 0, 0)"
+                        return "0px 0px 2px rgb(200, 0, 0)"
+                    },"color"(){
+                        if(hasUpgrade("a",26)||tmp.a.upgrades[26].canAfford) return "rgb(0, 0, 0)"
+                        return "rgb(200, 0, 0)"
+                    }
+                },
+        },
         27:{
             title:"F[9]",
             description(){return `"Hidden proton" log10 -> log2.`},
@@ -2469,6 +2561,33 @@ addLayer("a", {
                     },"color"(){
                         if(hasUpgrade("a",28)||tmp.a.upgrades[28].canAfford) return "rgb(0, 0, 0)"
                         return "rgb(200, 0, 200)"
+                    }
+                },
+        },
+        31:{
+            title:"Na[11]",
+            description(){return `Electron resets nothing.`},
+            cost(){return new Decimal(45000).times(player.a.row3costmult)},
+            unlocked(){
+                return hasUpgrade("a",21)
+            },
+            onPurchase(){
+                player.a.boughtsum=player.a.boughtsum.add(this.cost)
+                player.a.row3costmult=player.a.row3costmult.times(1.2)
+            },
+            canAfford(){return player.a.points.gte(player.a.row3costmult.times(45000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row3costmult.times(45000))},
+            style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(220, 70, 2)","min-height":"100px","background-color"(){
+                        if(hasUpgrade("a",31)) return "rgb(220, 70, 2)"
+                        if(tmp.a.upgrades[31].canAfford) return "rgba(220, 70, 0, 0.3)"
+                        return "rgb(0, 0, 0)"
+                    },"box-shadow"(){
+                        if(hasUpgrade("a",31)) return "0px 0px 15px rgba(220, 70, 0, 0.75)"
+                        if(tmp.a.upgrades[31].canAfford) return "0px 0px 20px rgb(220, 70, 0)"
+                        return "0px 0px 2px rgb(220, 70, 0)"
+                    },"color"(){
+                        if(hasUpgrade("a",31)||tmp.a.upgrades[31].canAfford) return "rgb(0, 0, 0)"
+                        return "rgb(220, 70, 0)"
                     }
                 },
         },
