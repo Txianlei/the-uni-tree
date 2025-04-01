@@ -932,6 +932,7 @@ addLayer("p", {
         if(hasChallenge("n",12)) mult=mult.times(25)
         if(hasChallenge("n",21)) mult=mult.times(100)
         if(player.a.unlocked) mult=mult.times(tmp.a.getatomboost)
+        if(hasUpgrade("a",23)) mult=mult.times(upgradeEffect("a",23))
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
@@ -1129,7 +1130,7 @@ addLayer("p", {
             },
             canAfford(){return player.p.points.gte(1e7)},
             pay(){return player.p.points=player.p.points.minus(1e7)},
-            effect(){return player.g.points.add(1).log10().pow(0.5).add(1)},
+            effect(){return player.g.points.add(1).log(hasUpgrade("a",27)?2:10).pow(0.5).add(1)},
             effectDisplay(){return `Currently:x${format(upgradeEffect("p",33))}`},
             tooltip(){return `log(g+1)^0.5`}
         },
@@ -1297,7 +1298,6 @@ addLayer("e", {
     gainExp() { // Calculate the exponent on main currency from bonuses
         exp = new Decimal(1)
         if(player.a.unlocked) exp=exp.times(buyableEffect("a",22))
-        if(hasMilestone("a",2)) exp=exp.times(0.8)
         return exp
     },
     row: 2, // Row the layer is in on the tree (0 is the first row)
@@ -1382,6 +1382,7 @@ addLayer("e", {
         let maxc=1
         if(hasUpgrade("n",13)) maxc=2
         if(hasUpgrade("n",43)) maxc=3
+        if(hasUpgrade("a",28)) maxc=4
         return maxc
     },
     getchargestyle(){
@@ -1565,6 +1566,7 @@ addLayer("n", {
     doReset(resettingLayer){
         let keep=[]
         if(hasMilestone("a",2)) keep.push("challenges")
+        if(hasUpgrade("a",22)) keep.push("upgrades")
         if (layers[resettingLayer].row > this.row) {
             layerDataReset("n", keep)
         }
@@ -1631,7 +1633,6 @@ addLayer("n", {
             player.n.mixcolorB-=11.75
             if(player.n.mixcolorR>=235){
                 player.n.state1=false
-                setTimeout(() => player.n.state2=true,250)
                 player.n.state2=true
             }
         }
@@ -1640,7 +1641,6 @@ addLayer("n", {
             player.n.mixcolorG-=11.25
             if(player.n.mixcolorG<=0){
                 player.n.state2=false
-                setTimeout(() => player.n.state3=true,250)
                 player.n.state3=true
             }
         }
@@ -1650,7 +1650,6 @@ addLayer("n", {
             player.n.mixcolorB+=11.75
             if(player.n.mixcolorB>=235){
                 player.n.state3=false
-                setTimeout(() => player.n.state1=true,250)
                 player.n.state1=true
             }
         }
@@ -2035,6 +2034,8 @@ addLayer("a", {
 		points: new Decimal(0),
         total: new Decimal(0),
         row1costmult: new Decimal(1),
+        row2costmult: new Decimal(1),
+        boughtsum: new Decimal(0),
     }},
     color:"rgb(20, 110, 175)",
     requires: new Decimal(15), // Can be a function that takes requirement increases into account
@@ -2046,6 +2047,7 @@ addLayer("a", {
     gainMult() { // Calculate the multiplier for main currency from bonuses
         mult = new Decimal(1)
         if(hasChallenge("n",31)) mult=mult.times(2)
+        if(hasUpgrade("a",21)) mult=mult.times(upgradeEffect("a",21))
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
@@ -2239,7 +2241,7 @@ addLayer("a", {
         2: {
             requirementDescription: "3 total atom",
             done() { return player.a.total.gte(3)},
-            effectDescription: `Electron price ^0.8. Keep neutron challenges completions on reset.`,
+            effectDescription: `Keep neutron challenges completions on reset.`,
         },
         3: {
             requirementDescription: "5 total atom",
@@ -2264,12 +2266,14 @@ addLayer("a", {
     },
     clickables:{
         11:{
-            display(){return `respec elements(won't give back atoms you've spent)`},
+            display(){return `respec elements(give back ${format(player.a.boughtsum)} atom)`},
             style:{"height":"75px","min-height":"75px","width":"400px","border-radius":"5%","border-size":"6px","border-color":"rgb(20,110,175)","color":"rgb(20,110,175)","font-size":"15px","background-color":"rgba(20,110,175,0.3)"},
             unlocked(){return player.e.unlocked},
             onClick(){
                 player.a.upgrades=[]
-                playera.row1costmult=new Decimal(1)
+                player.a.row1costmult=new Decimal(1)
+                player.a.row2costmult=new Decimal(1)
+                player.a.points=player.a.points.add(player.a.boughtsum)
             },
             canClick(){return true}
         },
@@ -2278,15 +2282,16 @@ addLayer("a", {
         11:{
             title:"H[1]",
             description(){return `Add 2 to "Negative" base.`},
-            cost(){return new Decimal(10000).times(player.a.row1costmult)},
+            cost(){return new Decimal(5000).times(player.a.row1costmult)},
             unlocked(){
                 return hasMilestone("a",6)
             },
             onPurchase(){
+                player.a.boughtsum=player.a.boughtsum.add(this.cost)
                 player.a.row1costmult=player.a.row1costmult.times(1.3)
             },
-            canAfford(){return player.a.points.gte(player.a.row1costmult.times(10000))},
-            pay(){return player.a.points=player.a.points.minus(player.a.row1costmult.times(10000))},
+            canAfford(){return player.a.points.gte(player.a.row1costmult.times(5000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row1costmult.times(5000))},
             style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 0, 0)","min-height":"100px","background-color"(){
                         if(hasUpgrade("a",11)) return "rgb(200, 0, 0)"
                         if(tmp.a.upgrades[11].canAfford) return "rgba(200, 0, 0, 0.3)"
@@ -2304,15 +2309,16 @@ addLayer("a", {
         12:{
             title:"He[2]",
             description(){return `Add 0.2 to "Vanish" base.`},
-            cost(){return new Decimal(12000).times(player.a.row1costmult)},
+            cost(){return new Decimal(6000).times(player.a.row1costmult)},
             unlocked(){
                 return hasMilestone("a",6)
             },
             onPurchase(){
+                player.a.boughtsum=player.a.boughtsum.add(this.cost)
                 player.a.row1costmult=player.a.row1costmult.times(1.3)
             },
-            canAfford(){return player.a.points.gte(player.a.row1costmult.times(12000))},
-            pay(){return player.a.points=player.a.points.minus(player.a.row1costmult.times(12000))},
+            canAfford(){return player.a.points.gte(player.a.row1costmult.times(6000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row1costmult.times(6000))},
             style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 0, 200)","min-height":"100px","background-color"(){
                         if(hasUpgrade("a",12)) return "rgb(200, 0, 200)"
                         if(tmp.a.upgrades[12].canAfford) return "rgba(200, 0, 200, 0.3)"
@@ -2323,6 +2329,145 @@ addLayer("a", {
                         return "0px 0px 2px rgb(200, 0, 200)"
                     },"color"(){
                         if(hasUpgrade("a",12)||tmp.a.upgrades[12].canAfford) return "rgb(0, 0, 0)"
+                        return "rgb(200, 0, 200)"
+                    }
+                },
+        },
+        21:{
+            title:"Li[3]",
+            description(){return `Boost atom gain based on itself.`},
+            cost(){return new Decimal(7500).times(player.a.row2costmult)},
+            unlocked(){
+                return hasUpgrade("a",11)
+            },
+            onPurchase(){
+                player.a.boughtsum=player.a.boughtsum.add(this.cost)
+                player.a.row2costmult=player.a.row2costmult.times(1.1)
+            },
+            canAfford(){return player.a.points.gte(player.a.row2costmult.times(7500))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(7500))},
+            effect(){return player.a.points.log(2).pow(2).div(30)},
+            effectDisplay(){return `Currently:x${format(upgradeEffect("a",21))}`},
+            style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(220, 70, 2)","min-height":"100px","background-color"(){
+                        if(hasUpgrade("a",21)) return "rgb(220, 70, 2)"
+                        if(tmp.a.upgrades[21].canAfford) return "rgba(220, 70, 0, 0.3)"
+                        return "rgb(0, 0, 0)"
+                    },"box-shadow"(){
+                        if(hasUpgrade("a",21)) return "0px 0px 15px rgba(220, 70, 0, 0.75)"
+                        if(tmp.a.upgrades[21].canAfford) return "0px 0px 20px rgb(220, 70, 0)"
+                        return "0px 0px 2px rgb(220, 70, 0)"
+                    },"color"(){
+                        if(hasUpgrade("a",21)||tmp.a.upgrades[21].canAfford) return "rgb(0, 0, 0)"
+                        return "rgb(220, 70, 0)"
+                    }
+                },
+        },
+        22:{
+            title:"Be[4]",
+            description(){return `Keep neutron upgrades on reset.`},
+            cost(){return new Decimal(4000).times(player.a.row2costmult)},
+            unlocked(){
+                return hasUpgrade("a",21)
+            },
+            onPurchase(){
+                player.a.boughtsum=player.a.boughtsum.add(this.cost)
+                player.a.row2costmult=player.a.row2costmult.times(1.4)
+            },
+            canAfford(){return player.a.points.gte(player.a.row2costmult.times(4000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(4000))},
+            style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 130, 0)","min-height":"100px","background-color"(){
+                        if(hasUpgrade("a",22)) return "rgb(200, 130, 0)"
+                        if(tmp.a.upgrades[22].canAfford) return "rgba(200, 130, 0, 0.3)"
+                        return "rgb(0, 0, 0)"
+                    },"box-shadow"(){
+                        if(hasUpgrade("a",22)) return "0px 0px 15px rgba(200, 130, 0, 0.75)"
+                        if(tmp.a.upgrades[22].canAfford) return "0px 0px 20px rgb(200, 130, 0)"
+                        return "0px 0px 2px rgb(200, 130, 0)"
+                    },"color"(){
+                        if(hasUpgrade("a",22)||tmp.a.upgrades[22].canAfford) return "rgb(0, 0, 0)"
+                        return "rgb(200, 130, 0)"
+                    }
+                },
+        },
+        23:{
+            title:"B[5]",
+            description(){return `x5 proton gain for each element bought.`},
+            cost(){return new Decimal(8000).times(player.a.row2costmult)},
+            unlocked(){
+                return hasUpgrade("a",22)
+            },
+            onPurchase(){
+                player.a.boughtsum=player.a.boughtsum.add(this.cost)
+                player.a.row2costmult=player.a.row2costmult.times(1.2)
+            },
+            canAfford(){return player.a.points.gte(player.a.row2costmult.times(8000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(8000))},
+            effect(){return Decimal.pow(5,player.a.upgrades.length)},
+            effectDisplay(){return `Currently:x${format(upgradeEffect("a",23))}`},
+            style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(150, 200, 0)","min-height":"100px","background-color"(){
+                        if(hasUpgrade("a",23)) return "rgb(150, 200, 0)"
+                        if(tmp.a.upgrades[23].canAfford) return "rgba(150, 200, 0, 0.3)"
+                        return "rgb(0, 0, 0)"
+                    },"box-shadow"(){
+                        if(hasUpgrade("a",23)) return "0px 0px 15px rgba(150, 200, 0, 0.75)"
+                        if(tmp.a.upgrades[23].canAfford) return "0px 0px 20px rgb(150, 200, 0)"
+                        return "0px 0px 2px rgb(150, 200, 0)"
+                    },"color"(){
+                        if(hasUpgrade("a",23)||tmp.a.upgrades[23].canAfford) return "rgb(0, 0, 0)"
+                        return "rgb(150, 200, 0)"
+                    }
+                },
+        },
+        27:{
+            title:"F[9]",
+            description(){return `"Hidden proton" log10 -> log2.`},
+            cost(){return new Decimal(25000).times(player.a.row2costmult)},
+            unlocked(){
+                return hasUpgrade("a",28)
+            },
+            onPurchase(){
+                player.a.boughtsum=player.a.boughtsum.add(this.cost)
+                player.a.row2costmult=player.a.row2costmult.times(1.1)
+            },
+            canAfford(){return player.a.points.gte(player.a.row2costmult.times(25000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(25000))},
+            style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 0, 0)","min-height":"100px","background-color"(){
+                        if(hasUpgrade("a",27)) return "rgb(200, 0, 0)"
+                        if(tmp.a.upgrades[27].canAfford) return "rgba(200, 0, 0, 0.3)"
+                        return "rgb(0, 0, 0)"
+                    },"box-shadow"(){
+                        if(hasUpgrade("a",27)) return "0px 0px 15px rgba(200, 0, 0, 0.75)"
+                        if(tmp.a.upgrades[27].canAfford) return "0px 0px 20px rgb(200, 0, 0)"
+                        return "0px 0px 2px rgb(200, 0, 0)"
+                    },"color"(){
+                        if(hasUpgrade("a",27)||tmp.a.upgrades[27].canAfford) return "rgb(0, 0, 0)"
+                        return "rgb(200, 0, 0)"
+                    }
+                },
+        },
+        28:{
+            title:"Ne[10]",
+            description(){return `You can charge 4 things at once.`},
+            cost(){return new Decimal(10000).times(player.a.row2costmult)},
+            unlocked(){
+                return hasUpgrade("a",12)
+            },
+            onPurchase(){
+                player.a.boughtsum=player.a.boughtsum.add(this.cost)
+                player.a.row2costmult=player.a.row2costmult.times(1.3)
+            },
+            canAfford(){return player.a.points.gte(player.a.row2costmult.times(10000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(10000))},
+            style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 0, 200)","min-height":"100px","background-color"(){
+                        if(hasUpgrade("a",28)) return "rgb(200, 0, 200)"
+                        if(tmp.a.upgrades[28].canAfford) return "rgba(200, 0, 200, 0.3)"
+                        return "rgb(0, 0, 0)"
+                    },"box-shadow"(){
+                        if(hasUpgrade("a",28)) return "0px 0px 15px rgba(200, 0, 200, 0.75)"
+                        if(tmp.a.upgrades[28].canAfford) return "0px 0px 20px rgb(200, 0, 200)"
+                        return "0px 0px 2px rgb(200, 0, 200)"
+                    },"color"(){
+                        if(hasUpgrade("a",28)||tmp.a.upgrades[28].canAfford) return "rgb(0, 0, 0)"
                         return "rgb(200, 0, 200)"
                     }
                 },
