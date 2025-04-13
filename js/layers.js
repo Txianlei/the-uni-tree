@@ -612,6 +612,7 @@ addLayer("q", {
         bottomboost=new Decimal(1)
         if(hasMilestone("q",4)){
             topboost=player.q.topquark.add(1).log10().pow(3).div(100).add(1)
+            if(hasUpgrade("a",33)) topboost=topboost.pow(upgradeEffect("a",33))
         }
         if(hasMilestone("q",5)){
             bottomboost=player.q.bottomquark.add(1).log10().pow(2).div(100).add(1)
@@ -933,6 +934,7 @@ addLayer("p", {
         if(hasChallenge("n",21)) mult=mult.times(100)
         if(player.a.unlocked) mult=mult.times(tmp.a.getatomboost)
         if(hasUpgrade("a",23)) mult=mult.times(upgradeEffect("a",23))
+        if(hasUpgrade("a",35)) mult=mult.times(upgradeEffect("a",35))
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
@@ -940,7 +942,7 @@ addLayer("p", {
         if(player.e.ischarge4) exp=exp.times(tmp.e.chargeeff[4])
         if(hasChallenge("n",22)) exp=exp.times(1.05)
         if(player.a.unlocked) exp=exp.times(buyableEffect("a",21))
-        return new Decimal(1)
+        return exp
     },
     row: 2, // Row the layer is in on the tree (0 is the first row)
     hotkeys: [
@@ -1560,7 +1562,7 @@ addLayer("n", {
     gainExp() { // Calculate the exponent on main currency from bonuses
         exp=new Decimal(1)
         if(player.a.unlocked) exp=exp.times(buyableEffect("a",23))
-        return new Decimal(1)
+        return exp
     },
     row: 2, // Row the layer is in on the tree (0 is the first row)
     layerShown(){return hasUpgrade("p",35)||player.a.unlocked},
@@ -1739,7 +1741,7 @@ addLayer("n", {
             },
             canAfford(){return player.n.points.gte(200)},
             pay(){return player.n.points=player.n.points.minus(200)},
-            effect(){return player.points.add(1).log10().add(1)},
+            effect(){return player.points.add(1).log10().add(1).pow(hasUpgrade("a",32)?1.8:1)},
             effectDisplay(){return `Currently:x${format(upgradeEffect("n",22))}`},
             tooltip(){return `log10(f+1)+1`}
         },
@@ -2035,7 +2037,7 @@ addLayer("a", {
     symbol: "A", // This appears on the layer's node. Default is the id with the first letter capitalized
     position: 0, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
     startData() { return {
-        unlocked: true,
+        unlocked: false,
 		points: new Decimal(0),
         total: new Decimal(0),
         row1costmult: new Decimal(1),
@@ -2101,7 +2103,9 @@ addLayer("a", {
     },
     getatomboost(){
         let boost=new Decimal(1)
-        boost=Decimal.pow(5,player.a.points.add(1).log10())
+        let exp=new Decimal(5)
+        if(hasUpgrade("a",36)) exp=exp.add(0.5)
+        boost=Decimal.pow(exp,player.a.points.add(1).log10())
         return boost
     },
     update(diff){
@@ -2289,7 +2293,7 @@ addLayer("a", {
         11:{
             title:"H[1]",
             description(){return `Add 2 to "Negative" base.`},
-            cost(){return new Decimal(5000).times(player.a.row1costmult)},
+            cost(){return new Decimal(8000).times(player.a.row1costmult)},
             unlocked(){
                 return hasMilestone("a",6)
             },
@@ -2297,8 +2301,8 @@ addLayer("a", {
                 player.a.boughtsum=player.a.boughtsum.add(this.cost)
                 player.a.row1costmult=player.a.row1costmult.times(1.3)
             },
-            canAfford(){return player.a.points.gte(player.a.row1costmult.times(5000))},
-            pay(){return player.a.points=player.a.points.minus(player.a.row1costmult.times(5000))},
+            canAfford(){return player.a.points.gte(player.a.row1costmult.times(8000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row1costmult.times(8000))},
             style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 0, 0)","min-height":"100px","background-color"(){
                         if(hasUpgrade("a",11)) return "rgb(200, 0, 0)"
                         if(tmp.a.upgrades[11].canAfford) return "rgba(200, 0, 0, 0.3)"
@@ -2316,7 +2320,7 @@ addLayer("a", {
         12:{
             title:"He[2]",
             description(){return `Add 0.2 to "Vanish" base.`},
-            cost(){return new Decimal(6000).times(player.a.row1costmult)},
+            cost(){return new Decimal(12000).times(player.a.row1costmult)},
             unlocked(){
                 return hasMilestone("a",6)
             },
@@ -2324,8 +2328,8 @@ addLayer("a", {
                 player.a.boughtsum=player.a.boughtsum.add(this.cost)
                 player.a.row1costmult=player.a.row1costmult.times(1.3)
             },
-            canAfford(){return player.a.points.gte(player.a.row1costmult.times(6000))},
-            pay(){return player.a.points=player.a.points.minus(player.a.row1costmult.times(6000))},
+            canAfford(){return player.a.points.gte(player.a.row1costmult.times(12000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row1costmult.times(12000))},
             style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 0, 200)","min-height":"100px","background-color"(){
                         if(hasUpgrade("a",12)) return "rgb(200, 0, 200)"
                         if(tmp.a.upgrades[12].canAfford) return "rgba(200, 0, 200, 0.3)"
@@ -2343,7 +2347,7 @@ addLayer("a", {
         21:{
             title:"Li[3]",
             description(){return `Boost atom gain based on itself.`},
-            cost(){return new Decimal(7500).times(player.a.row2costmult)},
+            cost(){return new Decimal(17500).times(player.a.row2costmult)},
             unlocked(){
                 return hasUpgrade("a",11)
             },
@@ -2351,8 +2355,8 @@ addLayer("a", {
                 player.a.boughtsum=player.a.boughtsum.add(this.cost)
                 player.a.row2costmult=player.a.row2costmult.times(1.1)
             },
-            canAfford(){return player.a.points.gte(player.a.row2costmult.times(7500))},
-            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(7500))},
+            canAfford(){return player.a.points.gte(player.a.row2costmult.times(17500))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(17500))},
             effect(){return player.a.points.add(1).log(2).pow(2).div(30)},
             effectDisplay(){return `Currently:x${format(upgradeEffect("a",21))}`},
             style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(220, 70, 2)","min-height":"100px","background-color"(){
@@ -2372,7 +2376,7 @@ addLayer("a", {
         22:{
             title:"Be[4]",
             description(){return `Keep neutron upgrades on reset.`},
-            cost(){return new Decimal(4000).times(player.a.row2costmult)},
+            cost(){return new Decimal(14000).times(player.a.row2costmult)},
             unlocked(){
                 return hasUpgrade("a",21)
             },
@@ -2380,8 +2384,8 @@ addLayer("a", {
                 player.a.boughtsum=player.a.boughtsum.add(this.cost)
                 player.a.row2costmult=player.a.row2costmult.times(1.4)
             },
-            canAfford(){return player.a.points.gte(player.a.row2costmult.times(4000))},
-            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(4000))},
+            canAfford(){return player.a.points.gte(player.a.row2costmult.times(14000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(14000))},
             style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 130, 0)","min-height":"100px","background-color"(){
                         if(hasUpgrade("a",22)) return "rgb(200, 130, 0)"
                         if(tmp.a.upgrades[22].canAfford) return "rgba(200, 130, 0, 0.3)"
@@ -2399,7 +2403,7 @@ addLayer("a", {
         23:{
             title:"B[5]",
             description(){return `x5 proton gain for each element bought.`},
-            cost(){return new Decimal(8000).times(player.a.row2costmult)},
+            cost(){return new Decimal(18000).times(player.a.row2costmult)},
             unlocked(){
                 return hasUpgrade("a",22)
             },
@@ -2407,8 +2411,8 @@ addLayer("a", {
                 player.a.boughtsum=player.a.boughtsum.add(this.cost)
                 player.a.row2costmult=player.a.row2costmult.times(1.2)
             },
-            canAfford(){return player.a.points.gte(player.a.row2costmult.times(8000))},
-            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(8000))},
+            canAfford(){return player.a.points.gte(player.a.row2costmult.times(18000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(18000))},
             effect(){return Decimal.pow(5,player.a.upgrades.length)},
             effectDisplay(){return `Currently:x${format(upgradeEffect("a",23))}`},
             style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(150, 200, 0)","min-height":"100px","background-color"(){
@@ -2428,7 +2432,7 @@ addLayer("a", {
         24:{
             title:"C[6]",
             description(){return `Boost atom gain based on force.`},
-            cost(){return new Decimal(25000).times(player.a.row2costmult)},
+            cost(){return new Decimal(45000).times(player.a.row2costmult)},
             unlocked(){
                 return hasUpgrade("a",23)
             },
@@ -2436,8 +2440,8 @@ addLayer("a", {
                 player.a.boughtsum=player.a.boughtsum.add(this.cost)
                 player.a.row2costmult=player.a.row2costmult.times(1.2)
             },
-            canAfford(){return player.a.points.gte(player.a.row2costmult.times(25000))},
-            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(25000))},
+            canAfford(){return player.a.points.gte(player.a.row2costmult.times(45000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(45000))},
             effect(){return player.points.add(1).log10().pow(4).div(2e9).add(1)},
             effectDisplay(){return `Currently:x${format(upgradeEffect("a",24))}`},
             style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 0, 0)","min-height":"100px","background-color"(){
@@ -2457,7 +2461,7 @@ addLayer("a", {
         25:{
             title:"N[7]",
             description(){return `+0.1 to x,y and z.`},
-            cost(){return new Decimal(50000).times(player.a.row2costmult)},
+            cost(){return new Decimal(80000).times(player.a.row2costmult)},
             unlocked(){
                 return hasUpgrade("a",26)
             },
@@ -2465,8 +2469,8 @@ addLayer("a", {
                 player.a.boughtsum=player.a.boughtsum.add(this.cost)
                 player.a.row2costmult=player.a.row2costmult.times(1.4)
             },
-            canAfford(){return player.a.points.gte(player.a.row2costmult.times(50000))},
-            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(50000))},
+            canAfford(){return player.a.points.gte(player.a.row2costmult.times(80000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(80000))},
             style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 0, 0)","min-height":"100px","background-color"(){
                         if(hasUpgrade("a",25)) return "rgb(200, 0, 0)"
                         if(tmp.a.upgrades[25].canAfford) return "rgba(200, 0, 0, 0.3)"
@@ -2484,7 +2488,7 @@ addLayer("a", {
         26:{
             title:"O[8]",
             description(){return `Boost NE gain based on atom.`},
-            cost(){return new Decimal(30000).times(player.a.row2costmult)},
+            cost(){return new Decimal(50000).times(player.a.row2costmult)},
             unlocked(){
                 return hasUpgrade("a",27)
             },
@@ -2492,8 +2496,8 @@ addLayer("a", {
                 player.a.boughtsum=player.a.boughtsum.add(this.cost)
                 player.a.row2costmult=player.a.row2costmult.times(1.3)
             },
-            canAfford(){return player.a.points.gte(player.a.row2costmult.times(30000))},
-            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(30000))},
+            canAfford(){return player.a.points.gte(player.a.row2costmult.times(50000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(50000))},
             effect(){return Decimal.pow(2,player.a.points.add(1).log10())},
             effectDisplay(){return `Currently:x${format(upgradeEffect("a",26))}`},
             style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 0, 0)","min-height":"100px","background-color"(){
@@ -2513,7 +2517,7 @@ addLayer("a", {
         27:{
             title:"F[9]",
             description(){return `"Hidden proton" log10 -> log2.`},
-            cost(){return new Decimal(25000).times(player.a.row2costmult)},
+            cost(){return new Decimal(45000).times(player.a.row2costmult)},
             unlocked(){
                 return hasUpgrade("a",28)
             },
@@ -2521,8 +2525,8 @@ addLayer("a", {
                 player.a.boughtsum=player.a.boughtsum.add(this.cost)
                 player.a.row2costmult=player.a.row2costmult.times(1.1)
             },
-            canAfford(){return player.a.points.gte(player.a.row2costmult.times(25000))},
-            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(25000))},
+            canAfford(){return player.a.points.gte(player.a.row2costmult.times(45000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(45000))},
             style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 0, 0)","min-height":"100px","background-color"(){
                         if(hasUpgrade("a",27)) return "rgb(200, 0, 0)"
                         if(tmp.a.upgrades[27].canAfford) return "rgba(200, 0, 0, 0.3)"
@@ -2540,7 +2544,7 @@ addLayer("a", {
         28:{
             title:"Ne[10]",
             description(){return `You can charge 4 things at once.`},
-            cost(){return new Decimal(10000).times(player.a.row2costmult)},
+            cost(){return new Decimal(30000).times(player.a.row2costmult)},
             unlocked(){
                 return hasUpgrade("a",12)
             },
@@ -2548,8 +2552,8 @@ addLayer("a", {
                 player.a.boughtsum=player.a.boughtsum.add(this.cost)
                 player.a.row2costmult=player.a.row2costmult.times(1.3)
             },
-            canAfford(){return player.a.points.gte(player.a.row2costmult.times(10000))},
-            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(10000))},
+            canAfford(){return player.a.points.gte(player.a.row2costmult.times(30000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row2costmult.times(30000))},
             style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 0, 200)","min-height":"100px","background-color"(){
                         if(hasUpgrade("a",28)) return "rgb(200, 0, 200)"
                         if(tmp.a.upgrades[28].canAfford) return "rgba(200, 0, 200, 0.3)"
@@ -2567,7 +2571,7 @@ addLayer("a", {
         31:{
             title:"Na[11]",
             description(){return `Electron resets nothing.`},
-            cost(){return new Decimal(45000).times(player.a.row3costmult)},
+            cost(){return new Decimal(75000).times(player.a.row3costmult)},
             unlocked(){
                 return hasUpgrade("a",21)
             },
@@ -2575,10 +2579,10 @@ addLayer("a", {
                 player.a.boughtsum=player.a.boughtsum.add(this.cost)
                 player.a.row3costmult=player.a.row3costmult.times(1.2)
             },
-            canAfford(){return player.a.points.gte(player.a.row3costmult.times(45000))},
-            pay(){return player.a.points=player.a.points.minus(player.a.row3costmult.times(45000))},
-            style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(220, 70, 2)","min-height":"100px","background-color"(){
-                        if(hasUpgrade("a",31)) return "rgb(220, 70, 2)"
+            canAfford(){return player.a.points.gte(player.a.row3costmult.times(75000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row3costmult.times(75000))},
+            style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(220, 70, 0)","min-height":"100px","background-color"(){
+                        if(hasUpgrade("a",31)) return "rgb(220, 70, 0)"
                         if(tmp.a.upgrades[31].canAfford) return "rgba(220, 70, 0, 0.3)"
                         return "rgb(0, 0, 0)"
                     },"box-shadow"(){
@@ -2588,6 +2592,147 @@ addLayer("a", {
                     },"color"(){
                         if(hasUpgrade("a",31)||tmp.a.upgrades[31].canAfford) return "rgb(0, 0, 0)"
                         return "rgb(220, 70, 0)"
+                    }
+                },
+        },
+        32:{
+            title:"Mg[12]",
+            description(){return `Neutron Boost II effect is ^1.8 stronger.`},
+            cost(){return new Decimal(95000).times(player.a.row3costmult)},
+            unlocked(){
+                return hasUpgrade("a",22)||hasUpgrade("a",31)
+            },
+            onPurchase(){
+                player.a.boughtsum=player.a.boughtsum.add(this.cost)
+                player.a.row3costmult=player.a.row3costmult.times(1.1)
+            },
+            canAfford(){return player.a.points.gte(player.a.row3costmult.times(95000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row3costmult.times(95000))},
+            style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 130, 0)","min-height":"100px","background-color"(){
+                        if(hasUpgrade("a",32)) return "rgb(200, 130, 0)"
+                        if(tmp.a.upgrades[32].canAfford) return "rgba(200, 130, 0, 0.3)"
+                        return "rgb(0, 0, 0)"
+                    },"box-shadow"(){
+                        if(hasUpgrade("a",32)) return "0px 0px 15px rgba(200, 130, 0, 0.75)"
+                        if(tmp.a.upgrades[32].canAfford) return "0px 0px 20px rgb(200, 130, 0)"
+                        return "0px 0px 2px rgb(200, 130, 0)"
+                    },"color"(){
+                        if(hasUpgrade("a",32)||tmp.a.upgrades[32].canAfford) return "rgb(0, 0, 0)"
+                        return "rgb(200, 130, 0)"
+                    }
+                },
+        },
+        33:{
+            title:"Al[13]",
+            description(){return `Topquark effect is stronger based on atom.`},
+            cost(){return new Decimal(300000).times(player.a.row3costmult)},
+            unlocked(){
+                return hasUpgrade("a",23)||hasUpgrade("a",32)
+            },
+            onPurchase(){
+                player.a.boughtsum=player.a.boughtsum.add(this.cost)
+                player.a.row3costmult=player.a.row3costmult.times(1.25)
+            },
+            canAfford(){return player.a.points.gte(player.a.row3costmult.times(300000))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row3costmult.times(300000))},
+            effect(){return player.a.points.div(1e5).add(1).log10().add(1).sqrt()},
+            effectDisplay(){return `^${format(upgradeEffect("a",33))}`},
+            style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(0, 220, 200)","min-height":"100px","background-color"(){
+                        if(hasUpgrade("a",33)) return "rgb(0, 220, 200)"
+                        if(tmp.a.upgrades[33].canAfford) return "rgba(0, 220, 200, 0.3)"
+                        return "rgb(0, 0, 0)"
+                    },"box-shadow"(){
+                        if(hasUpgrade("a",33)) return "0px 0px 15px rgba(0, 220, 200, 0.75)"
+                        if(tmp.a.upgrades[33].canAfford) return "0px 0px 20px rgb(0, 220, 200)"
+                        return "0px 0px 2px rgb(0, 220, 200)"
+                    },"color"(){
+                        if(hasUpgrade("a",33)||tmp.a.upgrades[33].canAfford) return "rgb(0, 0, 0)"
+                        return "rgb(0, 220, 200)"
+                    }
+                },
+        },
+        34:{
+            title:"Si[14]",
+            description(){return `Force softcap starts x25 later for each element bought.`},
+            cost(){return new Decimal(3e6).times(player.a.row3costmult)},
+            unlocked(){
+                return hasUpgrade("a",24)||hasUpgrade("a",33)
+            },
+            onPurchase(){
+                player.a.boughtsum=player.a.boughtsum.add(this.cost)
+                player.a.row3costmult=player.a.row3costmult.times(2)
+            },
+            canAfford(){return player.a.points.gte(player.a.row3costmult.times(3e6))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row3costmult.times(3e6))},
+            effect(){return Decimal.pow(25,player.a.upgrades.length)},
+            effectDisplay(){return `Currently:x${format(upgradeEffect("a",34))}`},
+            style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(150, 200, 0)","min-height":"100px","background-color"(){
+                        if(hasUpgrade("a",34)) return "rgb(150, 200, 0)"
+                        if(tmp.a.upgrades[34].canAfford) return "rgba(150, 200, 0, 0.3)"
+                        return "rgb(0, 0, 0)"
+                    },"box-shadow"(){
+                        if(hasUpgrade("a",34)) return "0px 0px 15px rgba(150, 200, 0, 0.75)"
+                        if(tmp.a.upgrades[34].canAfford) return "0px 0px 20px rgb(150, 200, 0)"
+                        return "0px 0px 2px rgb(150, 200, 0)"
+                    },"color"(){
+                        if(hasUpgrade("a",34)||tmp.a.upgrades[34].canAfford) return "rgb(0, 0, 0)"
+                        return "rgb(150, 200, 0)"
+                    }
+                },
+        },
+        35:{
+            title:"P[15]",
+            description(){return `Boost proton gain based on atom.`},
+            cost(){return new Decimal(1e7).times(player.a.row3costmult)},
+            unlocked(){
+                return hasUpgrade("a",25)||hasUpgrade("a",34)
+            },
+            onPurchase(){
+                player.a.boughtsum=player.a.boughtsum.add(this.cost)
+                player.a.row3costmult=player.a.row3costmult.times(1.3)
+            },
+            canAfford(){return player.a.points.gte(player.a.row3costmult.times(1e7))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row3costmult.times(1e7))},
+            effect(){return player.a.points.add(1).div(1000).pow(0.2).add(1)},
+            effectDisplay(){return `Currently:x${format(upgradeEffect("a",35))}`},
+            style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 0, 0)","min-height":"100px","background-color"(){
+                        if(hasUpgrade("a",35)) return "rgb(200, 0, 0)"
+                        if(tmp.a.upgrades[35].canAfford) return "rgba(200, 0, 0, 0.3)"
+                        return "rgb(0, 0, 0)"
+                    },"box-shadow"(){
+                        if(hasUpgrade("a",35)) return "0px 0px 15px rgba(200, 0, 0, 0.75)"
+                        if(tmp.a.upgrades[35].canAfford) return "0px 0px 20px rgb(200, 0, 0)"
+                        return "0px 0px 2px rgb(200, 0, 0)"
+                    },"color"(){
+                        if(hasUpgrade("a",35)||tmp.a.upgrades[35].canAfford) return "rgb(0, 0, 0)"
+                        return "rgb(200, 0, 0)"
+                    }
+                },
+        },
+        36:{
+            title:"S[16]",
+            description(){return `Add 0.5 to atom boost exp.`},
+            cost(){return new Decimal(5e7).times(player.a.row3costmult)},
+            unlocked(){
+                return hasUpgrade("a",26)||hasUpgrade("a",35)
+            },
+            onPurchase(){
+                player.a.boughtsum=player.a.boughtsum.add(this.cost)
+                player.a.row3costmult=player.a.row3costmult.times(1.8)
+            },
+            canAfford(){return player.a.points.gte(player.a.row3costmult.times(5e7))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row3costmult.times(5e7))},
+            style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 0, 0)","min-height":"100px","background-color"(){
+                        if(hasUpgrade("a",36)) return "rgb(200, 0, 0)"
+                        if(tmp.a.upgrades[36].canAfford) return "rgba(200, 0, 0, 0.3)"
+                        return "rgb(0, 0, 0)"
+                    },"box-shadow"(){
+                        if(hasUpgrade("a",36)) return "0px 0px 15px rgba(200, 0, 0, 0.75)"
+                        if(tmp.a.upgrades[36].canAfford) return "0px 0px 20px rgb(200, 0, 0)"
+                        return "0px 0px 2px rgb(200, 0, 0)"
+                    },"color"(){
+                        if(hasUpgrade("a",36)||tmp.a.upgrades[36].canAfford) return "rgb(0, 0, 0)"
+                        return "rgb(200, 0, 0)"
                     }
                 },
         },

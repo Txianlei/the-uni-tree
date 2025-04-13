@@ -87,6 +87,7 @@ function getForceSoftcap() {
     if(hasUpgrade("p",11)) startsAt=new Decimal(1)
     if(inChallenge("n",12)) startsAt=new Decimal("1e-39")
     if(player.e.ischarge3) startsAt=startsAt.times(tmp.e.chargeeff[3])
+    if(hasUpgrade("a",34)) startsAt=startsAt.times(upgradeEffect("a",34))
      
     let gain=new Decimal("1e-40")
     let base=new Decimal(3)
