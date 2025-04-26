@@ -1307,6 +1307,7 @@ addLayer("e", {
         {key: "e", description: "E: Reset for electron", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
     ],
     layerShown(){return hasUpgrade("q",45)||player.e.unlocked},
+    autoPrestige(){return hasUpgrade("a",37)},
     branches:["q"],
     tabFormat:{
         "Main":{
@@ -2055,6 +2056,7 @@ addLayer("a", {
     gainMult() { // Calculate the multiplier for main currency from bonuses
         mult = new Decimal(1)
         if(hasChallenge("n",31)) mult=mult.times(2)
+        if(hasUpgrade("a",37)) mult=mult.times(4)
         if(hasUpgrade("a",21)) mult=mult.times(upgradeEffect("a",21))
         if(hasUpgrade("a",24)) mult=mult.times(upgradeEffect("a",24))
         return mult
@@ -2272,7 +2274,7 @@ addLayer("a", {
         6: {
             requirementDescription: "10000 total atom",
             done() { return player.a.total.gte(10000)},
-            effectDescription: `Keep Neutron upgrade, unlock elements.`,
+            effectDescription: `Unlock elements.`,
         },
     },
     clickables:{
@@ -2736,6 +2738,60 @@ addLayer("a", {
                     }
                 },
         },
+        37:{
+            title:"Cl[17]",
+            description(){return `Auto buy electron and 4x atom gain.`},
+            cost(){return new Decimal(2e7).times(player.a.row3costmult)},
+            unlocked(){
+                return hasUpgrade("a",27)||hasUpgrade("a",36)
+            },
+            onPurchase(){
+                player.a.boughtsum=player.a.boughtsum.add(this.cost)
+                player.a.row3costmult=player.a.row3costmult.times(1.4)
+            },
+            canAfford(){return player.a.points.gte(player.a.row3costmult.times(2e7))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row3costmult.times(2e7))},
+            style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 0, 0)","min-height":"100px","background-color"(){
+                        if(hasUpgrade("a",37)) return "rgb(200, 0, 0)"
+                        if(tmp.a.upgrades[37].canAfford) return "rgba(200, 0, 0, 0.3)"
+                        return "rgb(0, 0, 0)"
+                    },"box-shadow"(){
+                        if(hasUpgrade("a",37)) return "0px 0px 15px rgba(200, 0, 0, 0.75)"
+                        if(tmp.a.upgrades[37].canAfford) return "0px 0px 20px rgb(200, 0, 0)"
+                        return "0px 0px 2px rgb(200, 0, 0)"
+                    },"color"(){
+                        if(hasUpgrade("a",37)||tmp.a.upgrades[37].canAfford) return "rgb(0, 0, 0)"
+                        return "rgb(200, 0, 0)"
+                    }
+                },
+        },
+        38:{
+            title:"Ar[18]",
+            description(){return `Finish this game, for now.`},
+            cost(){return new Decimal(1.5e8).times(player.a.row3costmult)},
+            unlocked(){
+                return hasUpgrade("a",37)
+            },
+            onPurchase(){
+                player.a.boughtsum=player.a.boughtsum.add(this.cost)
+                player.a.row3costmult=player.a.row3costmult.times(1.7)
+            },
+            canAfford(){return player.a.points.gte(player.a.row3costmult.times(1.5e8))},
+            pay(){return player.a.points=player.a.points.minus(player.a.row3costmult.times(1.5e8))},
+            style:{height:"100px",width:"100px","border-radius":"0%","border-size":"10px","border-color":"rgb(200, 0, 200)","min-height":"100px","background-color"(){
+                        if(hasUpgrade("a",38)) return "rgb(200, 0, 200)"
+                        if(tmp.a.upgrades[38].canAfford) return "rgba(200, 0, 200, 0.3)"
+                        return "rgb(0, 0, 0)"
+                    },"box-shadow"(){
+                        if(hasUpgrade("a",38)) return "0px 0px 15px rgba(200, 0, 200, 0.75)"
+                        if(tmp.a.upgrades[38].canAfford) return "0px 0px 20px rgb(200, 0, 200)"
+                        return "0px 0px 2px rgb(200, 0, 200)"
+                    },"color"(){
+                        if(hasUpgrade("a",38)||tmp.a.upgrades[38].canAfford) return "rgb(0, 0, 0)"
+                        return "rgb(200, 0, 200)"
+                    }
+                },
+        },
     }
 }),
 addLayer("st", {
@@ -2788,6 +2844,13 @@ addLayer("st", {
                 "blank",
             ],
             unlocked(){return player.p.unlocked},
+        },
+        "Chapter IV":{
+            content:[
+                ["infobox","Atom"],
+                "blank",
+            ],
+            unlocked(){return player.a.unlocked},
         }
     },
     infoboxes: {
@@ -2900,6 +2963,14 @@ addLayer("st", {
                             Which is harder to produce force.` },
             style:{"width":"400px"},
             unlocked(){return player.n.unlocked}
+        },
+        Atom: {
+            title: "Part I-Atom",
+            body() { return `Proton,Neutron and electron mixed together.<br>
+                            An atom appeared as the result of this combintion.<br>
+                            All of your resources could be boosted with atoms.` },
+            style:{"width":"400px"},
+            unlocked(){return player.a.unlocked}
         },
     },
 })

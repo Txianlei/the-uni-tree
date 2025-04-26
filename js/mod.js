@@ -14,14 +14,14 @@ let modInfo = {
 
 // Version Info
 let VERSION = {
-    num: "0.0",
-    name: "Literally nothing",
+    num: "0.A",
+    name: "There is a atom",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
-    <h3>v0.0</h3><br>
-        - Added things.<br>
-        - Added stuff.`
+    <h3>v0.A</h3><br>
+        - Added 6 layers.<br>
+        - Added the universe.`
 
 let winText = `Congratulations! You have reached the end of this game I guess.....`
 
@@ -129,7 +129,7 @@ var displayThings = [
 
 // Determines when the game "ends"
 function isEndgame() {
-    return hasUpgrade("a",11)&&hasUpgrade("a",12)
+    return hasUpgrade("a",38)
 }
 
 // Background styles
