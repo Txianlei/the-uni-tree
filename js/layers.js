@@ -282,7 +282,7 @@ addLayer("g", {
                 if(hasUpgrade("n",33)) base=base.add(1)
                 return Decimal.pow(base,x.add(buyableEffect("g",22)))
             },
-            display() { return ((hasUpgrade("q",23)||hasMilestone("a",0))?``:`Reset genesis,force, `+((hasUpgrade("q",14)||hasMilestone("a",0))?``:`and first 9 genesis upgrades`))+`boost genesis and force gain.
+            display() { return ((hasUpgrade("q",23)||hasMilestone("a",0))?``:`Reset genesis,force,`+((hasUpgrade("q",14)||hasMilestone("a",0))?``:` and first 9 genesis upgrades`))+` to boost genesis and force gain.
                                 Next at: ${format(this.cost())} genesis
                                 Amount: ${format(getBuyableAmount("g",11))}
                                 Effect: x${format(this.effect())}` },
@@ -2283,10 +2283,12 @@ addLayer("a", {
             style:{"height":"75px","min-height":"75px","width":"400px","border-radius":"5%","border-size":"6px","border-color":"rgb(20,110,175)","color":"rgb(20,110,175)","font-size":"15px","background-color":"rgba(20,110,175,0.3)"},
             unlocked(){return player.e.unlocked},
             onClick(){
-                player.a.upgrades=[]
+                player.a.upgrades=[]        
+                player.a.points=player.a.points.add(player.a.boughtsum)
+                player.a.boughtsum=new Decimal(0)
                 player.a.row1costmult=new Decimal(1)
                 player.a.row2costmult=new Decimal(1)
-                player.a.points=player.a.points.add(player.a.boughtsum)
+                player.a.row3costmult=new Decimal(1)
             },
             canClick(){return true}
         },
